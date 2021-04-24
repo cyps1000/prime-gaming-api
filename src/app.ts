@@ -1,40 +1,59 @@
-import express, { Request, Response, json } from "express";
-import "express-async-errors";
-import cors, { CorsOptions } from "cors";
+/**
+ * External Imports
+ */
+import express, { Request, Response } from "express";
 import { config } from "dotenv";
+import "express-async-errors";
+
+/**
+ * Imports Services
+ */
+import { setupCors } from "./services/cors";
+
+/**
+ * Imports routes
+ */
 import { usersRouter } from "./routes/users";
 
 /**
- * DOT ENV CONFIG
+ * Configures the dot env
  */
 config();
 
-const { WHITELIST } = process.env;
-
+/**
+ * Creates the express app
+ */
 const app = express();
 
-app.use(json());
+/**
+ * Defines the api version
+ */
+const apiVersion = "/v1";
 
-var whitelist = WHITELIST!.split(",");
-var corsOptions: CorsOptions = {
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  origin: function (origin, callback) {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
+/**
+ * Sets up cors
+ */
+setupCors(app);
 
-app.use(cors(corsOptions));
-console.log("CORS enabled.");
+/**
+ * Uses middlewares
+ */
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(apiVersion, usersRouter);
+
+/**
+ * Test api route
+ * @Temporary
+ */
 app.get("/test-api", (req, res) => {
   res.status(200).json({ message: "Hello from api" });
 });
 
-app.use(usersRouter);
-
+/**
+ * Catch all route
+ * @Temporary
+ */
 app.all("*", async (req: Request, res: Response) => {
   res.status(404).send("Route not found.");
 });
