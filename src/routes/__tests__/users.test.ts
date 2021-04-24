@@ -1,6 +1,6 @@
 import request from "supertest";
 import { app } from "../../app";
-import { User } from "../../models/user";
+import { User } from "../../models/User";
 
 it("creates a user with valid inputs", async () => {
   let users = await User.find({});
@@ -8,7 +8,7 @@ it("creates a user with valid inputs", async () => {
   expect(users.length).toEqual(0);
 
   await request(app)
-    .post("/api/users/new")
+    .post("/v1/users/new")
     .send({
       email: "test@test.com",
       age: 25,
