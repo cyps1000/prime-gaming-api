@@ -5,51 +5,45 @@ import { PasswordManager } from "../services/password-manager";
  * An interface that describes the properties
  * that are required to create a new user
  */
-interface UserAttributes {
-  email: string;
-  firstName: string;
-  lastName: string;
+interface AdminAttributes {
+  username: string;
   password: string;
+  role: "prime-admin";
 }
 
 /**
  * An interface that describes the properties
  * that a user document has
  */
-interface UserDocument extends mongoose.Document {
-  email: string;
-  firstName: string;
-  lastName: string;
+interface AdminDocument extends mongoose.Document {
+  username: string;
   password: string;
+  role: "prime-admin";
 }
 
 /**
  * An interface that describes the properties
  * that a user model has
  */
-interface UserModel extends mongoose.Model<UserDocument> {
-  build(attributes: UserAttributes): UserDocument;
+interface AdminModel extends mongoose.Model<AdminDocument> {
+  build(attributes: AdminAttributes): AdminDocument;
 }
 
 /**
  * Builds the user schema
  */
-const userSchema = new mongoose.Schema(
+const adminSchema = new mongoose.Schema(
   {
-    email: {
+    username: {
       type: String,
       required: true,
       unique: true,
     },
-    firstName: {
-      type: String,
-      required: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-    },
     password: {
+      type: String,
+      required: true,
+    },
+    role: {
       type: String,
       required: true,
     },
@@ -66,7 +60,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre("save", async function (done) {
+adminSchema.pre("save", async function (done) {
   if (this.isModified("password")) {
     const hashed = await PasswordManager.hash(this.get("password"));
     this.set("password", hashed);
@@ -75,10 +69,10 @@ userSchema.pre("save", async function (done) {
   done();
 });
 
-userSchema.statics.build = (attributes: UserAttributes) => {
-  return new User(attributes);
+adminSchema.statics.build = (attributes: AdminAttributes) => {
+  return new Admin(attributes);
 };
 
-const User = mongoose.model<UserDocument, UserModel>("User", userSchema);
+const Admin = mongoose.model<AdminDocument, AdminModel>("Admin", adminSchema);
 
-export { User };
+export { Admin };
