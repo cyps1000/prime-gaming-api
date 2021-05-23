@@ -1,14 +1,20 @@
-import { config } from "dotenv";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import dotenv from "dotenv";
 import mongoose from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 /**
- * DOT ENV CONFIG
+ * Enables access to .env
  */
-config();
+dotenv.config();
 
+/**
+ * Initializes mongo
+ */
 let mongo: any;
 
+/**
+ * Sets up mongodb before all tests
+ */
 beforeAll(async () => {
   mongo = new MongoMemoryServer();
   const mongoUri = await mongo.getUri();
@@ -20,6 +26,9 @@ beforeAll(async () => {
   });
 });
 
+/**
+ * Resets all collections before each test
+ */
 beforeEach(async () => {
   const collections = await mongoose.connection.db.collections();
 
@@ -28,6 +37,9 @@ beforeEach(async () => {
   }
 });
 
+/**
+ * Stops mongodb after all tests
+ */
 afterAll(async () => {
   await mongo.stop();
   await mongoose.connection.close();

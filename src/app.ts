@@ -1,12 +1,21 @@
+import express from "express";
+import path from "path";
+import "express-async-errors";
+
 /**
  * External Imports
  */
-import express, { Request, Response } from "express";
-import { config } from "dotenv";
-import "express-async-errors";
-import path from "path";
+import dotenv from "dotenv";
 import cookieSession from "cookie-session";
+
+/**
+ * Imports services
+ */
 import { NotFoundError } from "./services/error";
+
+/**
+ * Imports middlewares
+ */
 import { errorHandler } from "./middlewares/error-handler";
 
 /**
@@ -17,13 +26,14 @@ import { setupCors } from "./services/cors";
 /**
  * Imports routes
  */
-import { usersRouter } from "./routes/users";
 import { authRouter } from "./routes/auth";
+import { articlesRouter } from "./routes/articles";
+import { commentsRouter } from "./routes/comments";
 
 /**
- * Configures the dot env
+ * Enables access to .env
  */
-config();
+dotenv.config();
 
 /**
  * Creates the express app
@@ -52,17 +62,31 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(apiVersion, usersRouter);
+/**
+ * Routes
+ */
 app.use(apiVersion, authRouter);
+app.use(apiVersion, articlesRouter);
+app.use(apiVersion, commentsRouter);
 
+/**
+ * Sets up the api docs route (only in development)
+ */
 if (process.env.NODE_ENV !== "production") {
   app.use("/docs", express.static(path.join(__dirname, "docs")));
 }
 
+/**
+ * Catch all route
+ */
 app.all("*", async () => {
   throw new NotFoundError();
 });
 
+/**
+ * Error handler, must be placed last
+ * If any errors are thrown, this handler will be able to catch them
+ */
 app.use(errorHandler);
 
 export { app };
