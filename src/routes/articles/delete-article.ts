@@ -4,7 +4,11 @@ import { Article } from "../../models/Article";
 import { Admin } from "../../models/Admin";
 import jwt from "jsonwebtoken";
 import { validateRequest, requireAuth, currentUser } from "../../middlewares";
-import { BadRequestError, NotAuthorizedError } from "../../services/error";
+import {
+  BadRequestError,
+  NotAuthorizedError,
+  NotFoundError,
+} from "../../services/error";
 
 const requestValidation = [
   body("email").isEmail().withMessage("Email must be valid"),
@@ -19,27 +23,25 @@ const requestValidation = [
     .withMessage("Password must be between 4 and 20 characters"),
 ];
 
-const createArticle = async (req: Request, res: Response) => {
-  const { title, content } = req.body;
+const deleteArticle = async (req: Request, res: Response) => {
   const isAdmin = await Admin.findById(req.currentUser!.id);
 
   if (!isAdmin) {
     throw new NotAuthorizedError();
   }
 
-  const article = Article.build({
-    title,
-    content,
-    author: req.currentUser!.id,
-  });
-  await article.save();
+  const article = await Article.findById(req.params.id);
 
-  res.status(201).send(article);
+  if (!article) throw new NotFoundError();
+
+  await article.remove();
+
+  res.send({ message: "Article deleted successfully." });
 };
 
 /**
  * Defines the controller
  */
-const createArticleController: RequestHandler[] = [createArticle];
+const deleteArticleController: RequestHandler[] = [deleteArticle];
 
-export { createArticleController };
+export { deleteArticleController };

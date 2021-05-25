@@ -1,7 +1,7 @@
 /**
  * External Imports
  */
-import cors, { CorsOptions } from "cors";
+import cors, { CorsOptions, CorsRequest } from "cors";
 import { Express } from "express";
 
 /**
@@ -48,9 +48,24 @@ export const setupCors = async (app: Express) => {
     const corsOptions: CorsOptions = {
       methods: allowedMethods,
       origin: handleOrigin,
+      allowedHeaders: ["Content-Type", "application/json"],
+      preflightContinue: true,
     };
 
-    app.use(cors(corsOptions));
+    // app.all('*', function(req, res, next) {
+    //   res.header('Access-Control-Allow-Headers', 'Content-Type');
+    //   if ('OPTIONS' == req.method) {
+    //   res.sendStatus(200);
+    //   } else {
+    //     next();
+    //   }
+    // });
+
+    const corsOptionsDelegate = (req: CorsRequest, callback: any) => {
+      callback(null, corsOptions);
+    };
+
+    app.use(cors());
   } catch (error) {
     console.error(error);
     throw new Error("Something went wrong during cors setup.");

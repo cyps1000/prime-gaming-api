@@ -45,7 +45,8 @@ const getArticles = async (req: Request, res: Response) => {
         path: "userId",
         model: "User",
       },
-    });
+    })
+    .populate("author");
   const count = await Article.countDocuments();
 
   res.send({

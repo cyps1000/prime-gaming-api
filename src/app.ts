@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import "express-async-errors";
 
@@ -21,7 +21,8 @@ import { errorHandler } from "./middlewares/error-handler";
 /**
  * Imports Services
  */
-import { setupCors } from "./services/cors";
+// import { setupCors } from "./services/cors";
+import cors from "cors";
 
 /**
  * Imports routes
@@ -48,17 +49,25 @@ const apiVersion = "/v1";
 /**
  * Sets up cors
  */
-setupCors(app);
+// setupCors(app);
+
+app.use(function (req: Request, res: Response, next: NextFunction) {
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
+app.use(cors({ credentials: true }));
 
 /**
  * Uses middlewares
  */
-app.use(
-  cookieSession({
-    signed: false,
-    secure: process.env.NODE_ENV === "production",
-  })
-);
+app.set("trust proxy", true); // trust first proxy
+app.use(cookieSession({ signed: false, secure: false, domain: undefined }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

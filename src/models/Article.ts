@@ -11,7 +11,7 @@ interface ArticleAttributes {
   likes?: string[];
   shares?: string[];
   comments?: string[];
-  authorId: string;
+  author: string;
 }
 
 /**
@@ -25,7 +25,7 @@ interface ArticleDocument extends mongoose.Document {
   likes: string[];
   shares: string[];
   comments: string[];
-  authorId: string;
+  author: string;
 }
 
 /**
@@ -63,7 +63,7 @@ const articleSchema = new mongoose.Schema(
         ref: "Comment",
       },
     ],
-    authorId: {
+    author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
     },

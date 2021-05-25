@@ -55,8 +55,6 @@ const registerAdmin = async (req: Request, res: Response) => {
 
   const existingAdmin = await Admin.findOne({});
 
-  console.log("WORKS");
-
   if (existingAdmin) {
     throw new BadRequestError(
       "An admin account already exists, contact your system administrator."
