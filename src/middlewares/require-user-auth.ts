@@ -12,7 +12,7 @@ interface TokenData {
   exp: number;
 }
 
-export const requireAuth = async (
+export const requireUserAuth = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -31,15 +31,6 @@ export const requireAuth = async (
     if (!token) throw new NotAuthorizedError();
 
     const _token = token as TokenData;
-
-    if (_token.role === "prime-admin") {
-      const admin = await Admin.findById(_token.id);
-      if (admin) {
-        return next();
-      }
-
-      throw new BadRequestError("Account not found");
-    }
 
     const user = await User.findById(_token.id);
 

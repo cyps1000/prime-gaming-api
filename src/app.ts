@@ -6,7 +6,6 @@ import "express-async-errors";
  * External Imports
  */
 import dotenv from "dotenv";
-import cookieSession from "cookie-session";
 
 /**
  * Imports services
@@ -16,12 +15,11 @@ import { NotFoundError } from "./services/error";
 /**
  * Imports middlewares
  */
-import { errorHandler } from "./middlewares/error-handler";
+import { errorHandler, blacklistHandler } from "./middlewares";
 
 /**
  * Imports Services
  */
-// import { setupCors } from "./services/cors";
 import cors from "cors";
 
 /**
@@ -60,16 +58,14 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   next();
 });
 
-app.use(cors({ credentials: true }));
-
-/**
- * Uses middlewares
- */
-app.set("trust proxy", true); // trust first proxy
-app.use(cookieSession({ signed: false, secure: false, domain: undefined }));
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+/**
+ * Blacklist
+ */
+app.use(blacklistHandler);
 
 /**
  * Routes

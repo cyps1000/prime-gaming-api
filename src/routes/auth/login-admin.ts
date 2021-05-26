@@ -26,8 +26,10 @@
  * @apiError (Error 400 - Bad Request) InvalidCredentials <code>Invalid credentials.</code> 
  */
 import { Request, Response, RequestHandler } from "express";
+import mongoose from "mongoose";
 import { body } from "express-validator";
 import { Admin } from "../../models/Admin";
+import { RefreshToken } from "../../models/RefreshToken";
 import jwt from "jsonwebtoken";
 import { validateRequest } from "../../middlewares";
 import { BadRequestError } from "../../services/error";
@@ -63,16 +65,35 @@ const loginAdmin = async (req: Request, res: Response) => {
     throw new BadRequestError("Invalid credentials.");
   }
 
+  const tokenId = mongoose.Types.ObjectId().toHexString();
+
+  const expiresAt = new Date();
+  expiresAt.setSeconds(expiresAt.getSeconds() + 60);
+
+  const refreshTokenDoc = RefreshToken.build({
+    user: existingAdmin.id,
+    tokenId: tokenId,
+    expiresAt: expiresAt,
+    createdByIp: req.ip,
+  });
+
+  await refreshTokenDoc.save();
+
   const adminJWT = jwt.sign(
-    { id: existingAdmin.id, username: existingAdmin.username },
-    process.env.JWT_KEY!
+    {
+      id: existingAdmin.id,
+      tkId: tokenId,
+      role: existingAdmin.role,
+      refreshToken: refreshTokenDoc.id,
+    },
+    process.env.JWT_KEY!,
+    {
+      // expiresIn: 30 * 60, // 30 minutes
+      expiresIn: 15,
+    }
   );
 
-  req.session = {
-    jwt: adminJWT,
-  };
-
-  res.status(200).send(existingAdmin);
+  res.status(200).send({ token: adminJWT });
 };
 
 /**

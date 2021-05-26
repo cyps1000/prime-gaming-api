@@ -35,14 +35,61 @@
 
 import { Request, Response, RequestHandler } from "express";
 import { currentUser } from "../../middlewares";
+import jwt from "jsonwebtoken";
+import { Admin } from "../../models/Admin";
+import { User } from "../../models/User";
+import { BadRequestError, NotAuthorizedError } from "../../services/error";
+
+interface TokenData {
+  id: string;
+  role?: string;
+  iat: number;
+  exp: number;
+}
 
 /**
  * Handles geteting the current user
  */
-const getCurrentUser = (req: Request, res: Response) => {
-  res
-    .status(req.currentUser ? 200 : 404)
-    .send({ currentUser: req.currentUser || null });
+const getCurrentUser = async (req: Request, res: Response) => {
+  const { authorization } = req.headers;
+
+  if (!authorization) {
+    throw new BadRequestError("No authorization header provided");
+  }
+
+  try {
+    const token = jwt.verify(authorization, process.env.JWT_KEY!);
+
+    if (!token) throw new NotAuthorizedError();
+
+    const _token = token as TokenData;
+
+    if (_token.role === "prime-admin") {
+      const admin = await Admin.findById(_token.id);
+      if (admin) {
+        return res.send(admin);
+      }
+
+      throw new BadRequestError("Account not found");
+    }
+
+    const user = await User.findById(_token.id);
+
+    if (user) {
+      return res.send(user);
+    }
+
+    throw new BadRequestError("Account not found");
+  } catch (error) {
+    switch (error.name) {
+      case "JsonWebTokenError":
+        throw new BadRequestError("Token is invalid.");
+      case "TokenExpiredError":
+        throw new BadRequestError("Token has expired.");
+      default:
+        throw new BadRequestError(error);
+    }
+  }
 };
 
 /**

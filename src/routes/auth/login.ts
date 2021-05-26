@@ -62,16 +62,11 @@ const loginUser = async (req: Request, res: Response) => {
     throw new BadRequestError("Invalid credentials.");
   }
 
-  const userJWT = jwt.sign(
-    { id: existingUser.id, email: existingUser.email },
-    process.env.JWT_KEY!
-  );
+  const userJWT = jwt.sign({ id: existingUser.id }, process.env.JWT_KEY!, {
+    expiresIn: 10,
+  });
 
-  req.session = {
-    jwt: userJWT,
-  };
-
-  res.status(200).send(existingUser);
+  res.status(200).send({ token: userJWT });
 };
 
 /**

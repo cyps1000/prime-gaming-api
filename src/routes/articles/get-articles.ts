@@ -2,7 +2,7 @@ import { Request, Response, RequestHandler } from "express";
 import { body } from "express-validator";
 import { Article } from "../../models/Article";
 import jwt from "jsonwebtoken";
-import { validateRequest, requireAuth } from "../../middlewares";
+import { validateRequest, requireAdminAuth, requireUserAuth } from "../../middlewares";
 import { BadRequestError } from "../../services/error";
 
 const requestValidation = [
@@ -66,6 +66,6 @@ const getArticles = async (req: Request, res: Response) => {
 /**
  * Defines the controller
  */
-const getArticlesController: RequestHandler[] = [getArticles];
+const getArticlesController: RequestHandler[] = [requireAdminAuth, getArticles];
 
 export { getArticlesController };
