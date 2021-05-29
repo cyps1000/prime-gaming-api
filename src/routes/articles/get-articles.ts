@@ -2,7 +2,12 @@ import { Request, Response, RequestHandler } from "express";
 import { body } from "express-validator";
 import { Article } from "../../models/Article";
 import jwt from "jsonwebtoken";
-import { validateRequest, requireAdminAuth, requireUserAuth } from "../../middlewares";
+import {
+  validateRequest,
+  requireAuth,
+  requireUserAuth,
+  requireAdminAuth,
+} from "../../middlewares";
 import { BadRequestError } from "../../services/error";
 
 const requestValidation = [
@@ -30,8 +35,6 @@ const getArticles = async (req: Request, res: Response) => {
     orderBy: req.query.orderBy ? req.query.orderBy.toString() : "createdAt",
     orderDir: req.query.orderDir ? req.query.orderDir.toString() : "desc",
   };
-
-  console.log("pageOptions:", pageOptions);
 
   const articles = await Article.find({})
     .skip((pageOptions.page - 1) * pageOptions.limit)
@@ -66,6 +69,6 @@ const getArticles = async (req: Request, res: Response) => {
 /**
  * Defines the controller
  */
-const getArticlesController: RequestHandler[] = [requireAdminAuth, getArticles];
+const getArticlesController: RequestHandler[] = [requireUserAuth, getArticles];
 
 export { getArticlesController };

@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import path from "path";
 import "express-async-errors";
 
@@ -20,7 +20,7 @@ import { errorHandler, blacklistHandler } from "./middlewares";
 /**
  * Imports Services
  */
-import cors from "cors";
+import { setupCors } from "./services/cors";
 
 /**
  * Imports routes
@@ -47,18 +47,11 @@ const apiVersion = "/v1";
 /**
  * Sets up cors
  */
-// setupCors(app);
+app.use(setupCors());
 
-app.use(function (req: Request, res: Response, next: NextFunction) {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
-
-app.use(cors());
+/**
+ * Middlewares
+ */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -68,10 +61,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(blacklistHandler);
 
 /**
- * Routes
+ * Auth Router
  */
 app.use(apiVersion, authRouter);
+
+/**
+ * Articles Router
+ */
 app.use(apiVersion, articlesRouter);
+
+/**
+ * Comments Router
+ */
 app.use(apiVersion, commentsRouter);
 
 /**

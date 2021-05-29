@@ -4,3 +4,4 @@ export * from "./DatabaseConnectionError";
 export * from "./NotAuthorizedError";
 export * from "./NotFoundError";
 export * from "./RequestValidationError";
+export * from "./TokenError";

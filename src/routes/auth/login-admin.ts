@@ -26,15 +26,28 @@
  * @apiError (Error 400 - Bad Request) InvalidCredentials <code>Invalid credentials.</code> 
  */
 import { Request, Response, RequestHandler } from "express";
-import mongoose from "mongoose";
+
+/**
+ * Imports middlewares
+ */
 import { body } from "express-validator";
-import { Admin } from "../../models/Admin";
-import { RefreshToken } from "../../models/RefreshToken";
-import jwt from "jsonwebtoken";
 import { validateRequest } from "../../middlewares";
+
+/**
+ * Imports models
+ */
+import { Admin } from "../../models";
+
+/**
+ * Imports services
+ */
 import { BadRequestError } from "../../services/error";
+import { AuthService } from "../../services/auth";
 import { PasswordManager } from "../../services/password-manager";
 
+/**
+ * Defines the request validation middleware
+ */
 const requestValidation = [
   body("username")
     .trim()
@@ -47,15 +60,24 @@ const requestValidation = [
     .withMessage("You must provide a password."),
 ];
 
+/**
+ * Handles authenticating the admin
+ */
 const loginAdmin = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
+  /**
+   * Checks if the admin exists
+   */
   const existingAdmin = await Admin.findOne({ username });
 
   if (!existingAdmin) {
     throw new BadRequestError("Invalid credentials.");
   }
 
+  /**
+   * Checks if the provided password is correct
+   */
   const passwordsMatch = await PasswordManager.compare(
     existingAdmin.password,
     password
@@ -65,35 +87,20 @@ const loginAdmin = async (req: Request, res: Response) => {
     throw new BadRequestError("Invalid credentials.");
   }
 
-  const tokenId = mongoose.Types.ObjectId().toHexString();
+  /**
+   * Defines the payload
+   */
+  const payload = {
+    id: existingAdmin.id,
+    role: existingAdmin.role,
+  };
 
-  const expiresAt = new Date();
-  expiresAt.setSeconds(expiresAt.getSeconds() + 60);
+  /**
+   * Creates an access token
+   */
+  const { accessToken } = await AuthService.create(req, payload);
 
-  const refreshTokenDoc = RefreshToken.build({
-    user: existingAdmin.id,
-    tokenId: tokenId,
-    expiresAt: expiresAt,
-    createdByIp: req.ip,
-  });
-
-  await refreshTokenDoc.save();
-
-  const adminJWT = jwt.sign(
-    {
-      id: existingAdmin.id,
-      tkId: tokenId,
-      role: existingAdmin.role,
-      refreshToken: refreshTokenDoc.id,
-    },
-    process.env.JWT_KEY!,
-    {
-      // expiresIn: 30 * 60, // 30 minutes
-      expiresIn: 15,
-    }
-  );
-
-  res.status(200).send({ token: adminJWT });
+  res.send({ token: accessToken });
 };
 
 /**

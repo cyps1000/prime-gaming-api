@@ -1,17 +1,19 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { RefreshToken } from "../models/RefreshToken";
-import { Admin } from "../models/Admin";
-import { User } from "../models/User";
-import { BadRequestError, NotAuthorizedError } from "../services/error";
 
-interface TokenData {
-  id: string;
-  role?: string;
-  iat: number;
-  exp: number;
-}
+/**
+ * Imports models
+ */
+import { Admin, User } from "../models";
 
+/**
+ * Imports services
+ */
+import { BadRequestError } from "../services/error";
+import { AuthService } from "../services/auth";
+
+/**
+ * Defines the middleware
+ */
 export const requireUserAuth = async (
   req: Request,
   res: Response,
@@ -19,34 +21,34 @@ export const requireUserAuth = async (
 ) => {
   const { authorization } = req.headers;
 
-  if (!authorization) {
-    throw new BadRequestError("You are not authorized.");
-  }
+  /**
+   * Verifies the authorization header and gets the access token
+   */
+  const { accessToken } = await AuthService.verify(authorization);
 
-  try {
-    const token = jwt.verify(authorization, process.env.JWT_KEY!);
+  /**
+   * Assigns the token on each request
+   */
+  req.token = accessToken;
 
-    console.log("token:", token);
-
-    if (!token) throw new NotAuthorizedError();
-
-    const _token = token as TokenData;
-
-    const user = await User.findById(_token.id);
-
-    if (user) {
-      return next();
-    }
+  /**
+   * Checks if the user is an admin
+   */
+  if (accessToken.role === "prime-admin") {
+    /**
+     * Searches for the admin in the db
+     */
+    const admin = await Admin.findById(accessToken.id);
+    if (admin) return next();
 
     throw new BadRequestError("Account not found");
-  } catch (error) {
-    switch (error.name) {
-      case "JsonWebTokenError":
-        throw new BadRequestError("Token is invalid.");
-      case "TokenExpiredError":
-        throw new BadRequestError("Token has expired.");
-      default:
-        throw new BadRequestError(error.message);
-    }
   }
+
+  /**
+   * Searches for the user in the db
+   */
+  const user = await User.findById(accessToken.id);
+  if (user) return next();
+
+  throw new BadRequestError("Account not found");
 };

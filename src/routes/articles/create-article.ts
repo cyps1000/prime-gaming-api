@@ -21,6 +21,7 @@ const requestValidation = [
 
 const createArticle = async (req: Request, res: Response) => {
   const { title, content } = req.body;
+
   const isAdmin = await Admin.findById(req.currentUser!.id);
 
   if (!isAdmin) {

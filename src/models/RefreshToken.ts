@@ -4,7 +4,7 @@ import mongoose from "mongoose";
  * An interface that describes the properties
  * that are required to create a new user
  */
-interface RefreshTokenAttributes {
+export interface RefreshTokenAttributes {
   user: string;
   tokenId: string;
   expiresAt: Date;

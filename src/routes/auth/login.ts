@@ -27,15 +27,30 @@
  * @apiError (Error 400 - Bad Request)  EmailEmpty <code>Please provide your email.</code>
  * @apiError (Error 400 - Bad Request) InvalidCredentials <code>Invalid credentials.</code> 
  */
-
+import mongoose from "mongoose";
 import { Request, Response, RequestHandler } from "express";
+
+/**
+ * Imports middlewares
+ */
 import { body } from "express-validator";
-import { User } from "../../models/User";
-import jwt from "jsonwebtoken";
 import { validateRequest } from "../../middlewares";
+
+/**
+ * Imports models
+ */
+import { RefreshToken, User } from "../../models";
+
+/**
+ * Imports services
+ */
 import { BadRequestError } from "../../services/error";
+import { AuthService } from "../../services/auth";
 import { PasswordManager } from "../../services/password-manager";
 
+/**
+ * Defines the request validation middleware
+ */
 const requestValidation = [
   body("email").isEmail().withMessage("Email must be valid"),
   body("password")
@@ -44,15 +59,24 @@ const requestValidation = [
     .withMessage("You must provide a password."),
 ];
 
+/**
+ * Handles authenticating the user
+ */
 const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
+  /**
+   * Checks if the user exists
+   */
   const existingUser = await User.findOne({ email });
 
   if (!existingUser) {
     throw new BadRequestError("Invalid credentials.");
   }
 
+  /**
+   * Checks if the provided password is correct
+   */
   const passwordsMatch = await PasswordManager.compare(
     existingUser.password,
     password
@@ -62,11 +86,19 @@ const loginUser = async (req: Request, res: Response) => {
     throw new BadRequestError("Invalid credentials.");
   }
 
-  const userJWT = jwt.sign({ id: existingUser.id }, process.env.JWT_KEY!, {
-    expiresIn: 10,
-  });
+  /**
+   * Defines the payload
+   */
+  const payload = {
+    id: existingUser.id,
+  };
 
-  res.status(200).send({ token: userJWT });
+  /**
+   * Creates an access token
+   */
+  const { accessToken } = await AuthService.create(req, payload);
+
+  res.send({ token: accessToken });
 };
 
 /**

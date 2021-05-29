@@ -1,21 +1,35 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { RefreshToken } from "../models/RefreshToken";
-import { Admin } from "../models/Admin";
-import mongoose from "mongoose";
 
-import { User } from "../models/User";
+/**
+ * Imports types
+ */
+import { AccessToken } from "../routes/auth/types";
+
+/**
+ * Imports models
+ */
+import { Admin } from "../models";
+
+/**
+ * Imports services
+ */
 import { BadRequestError, NotAuthorizedError } from "../services/error";
+import { AuthService } from "../services/auth";
 
-interface TokenData {
-  id: string;
-  role?: string;
-  tkId: string;
-  iat: number;
-  exp: number;
-  refreshToken: string;
+/**
+ * Extends the request interface with the token key
+ */
+declare global {
+  namespace Express {
+    interface Request {
+      token?: AccessToken;
+    }
+  }
 }
 
+/**
+ * Defines the middleware
+ */
 export const requireAdminAuth = async (
   req: Request,
   res: Response,
@@ -23,73 +37,28 @@ export const requireAdminAuth = async (
 ) => {
   const { authorization } = req.headers;
 
-  if (!authorization) {
-    throw new BadRequestError("You are not authorized.");
-  }
+  /**
+   * Verifies the authorization header and gets the access token
+   */
+  const { accessToken } = await AuthService.verify(authorization);
 
-  try {
-    const token = jwt.verify(authorization, process.env.JWT_KEY!, {
-      ignoreExpiration: true,
-    });
+  /**
+   * Assigns the token on each request
+   */
+  req.token = accessToken;
 
-    console.log("token:", token, new Date().getTime() / 1000);
-
-    if (!token) throw new NotAuthorizedError();
-
-    const _token = token as TokenData;
-
-    console.log("Exp get time:", new Date(_token.exp).getTime());
-
-    if (new Date(_token.exp).getTime() < new Date().getTime() / 1000) {
-      const refreshToken = await RefreshToken.findById(_token.refreshToken);
-
-      if (!refreshToken) {
-        throw new BadRequestError("Token has expired.");
-      }
-
-      if (refreshToken.tokenId !== _token.tkId) {
-        throw new NotAuthorizedError();
-      }
-
-      const tokenId = mongoose.Types.ObjectId().toHexString();
-
-      const newToken = jwt.sign(
-        {
-          id: refreshToken.user,
-          tkId: tokenId,
-          role: _token.role,
-          refreshToken: refreshToken.id,
-        },
-        process.env.JWT_KEY!,
-        {
-          expiresIn: 30,
-        }
-      );
-
-      refreshToken.tokenId = tokenId;
-      await refreshToken.save();
-
-      return res.send({
-        message:
-          "Access token has expired. Use the new token to make the request.",
-        accessToken: newToken,
-      });
-    }
-
-    const admin = await Admin.findById(_token.id);
-    if (admin) {
-      return next();
-    }
+  /**
+   * Checks if the user is an admin
+   */
+  if (accessToken.role === "prime-admin") {
+    /**
+     * Searches for the admin in the db
+     */
+    const admin = await Admin.findById(accessToken.id);
+    if (admin) return next();
 
     throw new BadRequestError("Account not found");
-  } catch (error) {
-    switch (error.name) {
-      case "JsonWebTokenError":
-        throw new BadRequestError("Token is invalid.");
-      case "TokenExpiredError":
-        throw new BadRequestError("Token has expired.");
-      default:
-        throw new BadRequestError(error.message);
-    }
   }
+
+  throw new NotAuthorizedError();
 };
