@@ -3,12 +3,13 @@ import { body } from "express-validator";
 import { Article } from "../../models/Article";
 import { Admin } from "../../models/Admin";
 import jwt from "jsonwebtoken";
-import { validateRequest, requireAuth, currentUser } from "../../middlewares";
 import {
-  BadRequestError,
-  NotAuthorizedError,
-  NotFoundError,
-} from "../../services/error";
+  validateRequest,
+  requireAuth,
+  currentUser,
+  requireAdminAuth,
+} from "../../middlewares";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 const requestValidation = [
   body("email").isEmail().withMessage("Email must be valid"),
@@ -24,15 +25,11 @@ const requestValidation = [
 ];
 
 const deleteArticle = async (req: Request, res: Response) => {
-  const isAdmin = await Admin.findById(req.currentUser!.id);
-
-  if (!isAdmin) {
-    throw new NotAuthorizedError();
-  }
+  console.log("req.:", req.currentUser);
 
   const article = await Article.findById(req.params.id);
 
-  if (!article) throw new NotFoundError();
+  if (!article) throw new RequestError(ErrorTypes.ResourceNotFound);
 
   await article.remove();
 
@@ -42,6 +39,10 @@ const deleteArticle = async (req: Request, res: Response) => {
 /**
  * Defines the controller
  */
-const deleteArticleController: RequestHandler[] = [deleteArticle];
+const deleteArticleController: RequestHandler[] = [
+  requireAdminAuth,
+  currentUser,
+  deleteArticle,
+];
 
 export { deleteArticleController };

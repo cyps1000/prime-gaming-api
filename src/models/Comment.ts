@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 /**
  * An interface that describes the properties
- * that are required to create a new user
+ * that are required to create a new document
  */
-interface CommentAttributes {
+export interface CommentAttributes {
   userId: string;
   articleId: string;
   content: string;
@@ -16,9 +16,9 @@ interface CommentAttributes {
 
 /**
  * An interface that describes the properties
- * that a user document has
+ * that a document has
  */
-interface CommentDocument extends mongoose.Document {
+export interface CommentDocument extends mongoose.Document {
   userId: string;
   articleId: string;
   content: string;
@@ -30,14 +30,14 @@ interface CommentDocument extends mongoose.Document {
 
 /**
  * An interface that describes the properties
- * that a user model has
+ * that a model has
  */
-interface CommentModel extends mongoose.Model<CommentDocument> {
+export interface CommentModel extends mongoose.Model<CommentDocument> {
   build(attributes: CommentAttributes): CommentDocument;
 }
 
 /**
- * Builds the user schema
+ * Builds the schema
  */
 const commentSchema = new mongoose.Schema(
   {
@@ -75,10 +75,16 @@ const commentSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Adds a static method on the model which is used to create a new docment
+ */
 commentSchema.statics.build = (attributes: CommentAttributes) => {
   return new Comment(attributes);
 };
 
+/**
+ * Defines the model
+ */
 const Comment = mongoose.model<CommentDocument, CommentModel>(
   "Comment",
   commentSchema

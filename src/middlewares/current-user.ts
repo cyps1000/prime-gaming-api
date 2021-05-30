@@ -1,43 +1,23 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-/**
- * Defines the user payload
- */
-interface UserPayload {
-  id: string;
-}
 
 /**
- * Declares the current user as part of the req object globally
+ * Imports services
  */
-declare global {
-  namespace Express {
-    interface Request {
-      currentUser?: UserPayload;
-    }
-  }
-}
+import { AuthService } from "../services/auth";
 
 /**
  * Defines the middleware
  */
-export const currentUser = (
+export const currentUser = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  if (!req.session?.jwt) return next();
+  /**
+   * Handles getting the current user
+   */
+  const { currentUser } = await AuthService.getCurrentUser(req.token);
 
-  try {
-    const payload = jwt.verify(
-      req.session.jwt,
-      process.env.JWT_KEY!
-    ) as UserPayload;
-
-    req.currentUser = payload;
-  } catch (error) {
-    return res.send({ currentUser: null });
-  }
-
-  next();
+  req.currentUser = currentUser;
+  return next();
 };

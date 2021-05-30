@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 /**
  * An interface that describes the properties
- * that are required to create a new user
+ * that are required to create a new document
  */
-interface ArticleAttributes {
+export interface ArticleAttributes {
   title: string;
   content: string;
   createdAt?: Date;
@@ -16,9 +16,9 @@ interface ArticleAttributes {
 
 /**
  * An interface that describes the properties
- * that a user document has
+ * that a document has
  */
-interface ArticleDocument extends mongoose.Document {
+export interface ArticleDocument extends mongoose.Document {
   title: string;
   content: string;
   createdAt: Date;
@@ -30,14 +30,14 @@ interface ArticleDocument extends mongoose.Document {
 
 /**
  * An interface that describes the properties
- * that a user model has
+ * that a model has
  */
-interface ArticleModel extends mongoose.Model<ArticleDocument> {
+export interface ArticleModel extends mongoose.Model<ArticleDocument> {
   build(attributes: ArticleAttributes): ArticleDocument;
 }
 
 /**
- * Builds the user schema
+ * Builds the schema
  */
 const articleSchema = new mongoose.Schema(
   {
@@ -83,10 +83,16 @@ const articleSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Adds a static method on the model which is used to create a new docment
+ */
 articleSchema.statics.build = (attributes: ArticleAttributes) => {
   return new Article(attributes);
 };
 
+/**
+ * Defines the model
+ */
 const Article = mongoose.model<ArticleDocument, ArticleModel>(
   "Article",
   articleSchema

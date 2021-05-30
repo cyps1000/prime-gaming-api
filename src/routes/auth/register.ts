@@ -21,8 +21,9 @@ import { User, RefreshToken } from "../../models";
 /**
  * Imports services
  */
-import { BadRequestError } from "../../services/error";
+
 import { AuthService } from "../../services/auth";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Defines the request validation middleware
@@ -52,7 +53,7 @@ const registerUser = async (req: Request, res: Response) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    throw new BadRequestError("Email in use");
+    throw new RequestError(ErrorTypes.EmailInUse);
   }
 
   /**

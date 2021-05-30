@@ -18,34 +18,36 @@ const isAllowedOrigin = (origin: string | undefined, whitelist: string[]) => {
 };
 
 /**
- * Handles setting up cors
+ * Defines the Cors Service
  */
-export const setupCors = () => {
-  const corsOptionsDelegate: CorsOptionsDelegate = async (req, callback) => {
-    /**
-     * Gets the whitelist
-     */
-    const collection = await Whitelist.find({});
-    const whitelist = collection.map((item) => item.origin);
+export class CorsService {
+  static setup() {
+    const corsOptionsDelegate: CorsOptionsDelegate = async (req, callback) => {
+      /**
+       * Gets the whitelist
+       */
+      const collection = await Whitelist.find({});
+      const whitelist = collection.map((item) => item.origin);
 
-    /**
-     * Defines the cors options
-     */
-    const options = {
-      origin: false,
-      methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
-      allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization"],
+      /**
+       * Defines the cors options
+       */
+      const options = {
+        origin: false,
+        methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+        allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization"],
+      };
+
+      /**
+       * Checks if the origin is allowed
+       */
+      if (isAllowedOrigin(req.headers.origin, whitelist)) {
+        options["origin"] = true;
+      }
+
+      callback(null, options);
     };
 
-    /**
-     * Checks if the origin is allowed
-     */
-    if (isAllowedOrigin(req.headers.origin, whitelist)) {
-      options["origin"] = true;
-    }
-
-    callback(null, options);
-  };
-
-  return cors(corsOptionsDelegate);
-};
+    return cors(corsOptionsDelegate);
+  }
+}

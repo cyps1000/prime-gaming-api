@@ -1,4 +1,4 @@
-import { app } from "./app";
-import { bootServer } from "./services/boot";
+import { server } from "./server";
+import { BootService } from "./services/boot";
 
-bootServer(app);
+BootService.start(server);

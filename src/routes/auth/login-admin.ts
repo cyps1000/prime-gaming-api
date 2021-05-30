@@ -41,9 +41,10 @@ import { Admin } from "../../models";
 /**
  * Imports services
  */
-import { BadRequestError } from "../../services/error";
+
 import { AuthService } from "../../services/auth";
 import { PasswordManager } from "../../services/password-manager";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Defines the request validation middleware
@@ -72,7 +73,7 @@ const loginAdmin = async (req: Request, res: Response) => {
   const existingAdmin = await Admin.findOne({ username });
 
   if (!existingAdmin) {
-    throw new BadRequestError("Invalid credentials.");
+    throw new RequestError(ErrorTypes.InvalidCredentials);
   }
 
   /**
@@ -84,7 +85,7 @@ const loginAdmin = async (req: Request, res: Response) => {
   );
 
   if (!passwordsMatch) {
-    throw new BadRequestError("Invalid credentials.");
+    throw new RequestError(ErrorTypes.InvalidCredentials);
   }
 
   /**

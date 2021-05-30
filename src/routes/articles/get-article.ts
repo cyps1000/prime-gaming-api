@@ -1,6 +1,7 @@
 import { Request, Response, RequestHandler } from "express";
 import { Article } from "../../models/Article";
-import { NotFoundError } from "../../services/error";
+
+import { RequestError, ErrorTypes } from "../../services/error";
 
 const getArticle = async (req: Request, res: Response) => {
   const article = await Article.findById(req.params.id).populate({
@@ -11,7 +12,7 @@ const getArticle = async (req: Request, res: Response) => {
     },
   });
 
-  if (!article) throw new NotFoundError();
+  if (!article) throw new RequestError(ErrorTypes.ResourceNotFound);
 
   res.send(article);
 };

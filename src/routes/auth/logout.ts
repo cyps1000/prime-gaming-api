@@ -19,13 +19,13 @@ import { RefreshToken } from "../../models";
 /**
  * Imports services
  */
-import { NotAuthorizedError } from "../../services/error";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Handles logging out the user or admin
  */
 const logout = async (req: Request, res: Response) => {
-  if (!req.token) throw new NotAuthorizedError();
+  if (!req.token) throw new RequestError(ErrorTypes.TokenMissingFromReq);
 
   /**
    * Deletes the associated refresh token

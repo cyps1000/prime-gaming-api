@@ -27,7 +27,6 @@
  * @apiError (Error 400 - Bad Request)  EmailEmpty <code>Please provide your email.</code>
  * @apiError (Error 400 - Bad Request) InvalidCredentials <code>Invalid credentials.</code> 
  */
-import mongoose from "mongoose";
 import { Request, Response, RequestHandler } from "express";
 
 /**
@@ -39,14 +38,15 @@ import { validateRequest } from "../../middlewares";
 /**
  * Imports models
  */
-import { RefreshToken, User } from "../../models";
+import { User } from "../../models";
 
 /**
  * Imports services
  */
-import { BadRequestError } from "../../services/error";
+
 import { AuthService } from "../../services/auth";
 import { PasswordManager } from "../../services/password-manager";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Defines the request validation middleware
@@ -71,7 +71,7 @@ const loginUser = async (req: Request, res: Response) => {
   const existingUser = await User.findOne({ email });
 
   if (!existingUser) {
-    throw new BadRequestError("Invalid credentials.");
+    throw new RequestError(ErrorTypes.InvalidCredentials);
   }
 
   /**
@@ -83,7 +83,7 @@ const loginUser = async (req: Request, res: Response) => {
   );
 
   if (!passwordsMatch) {
-    throw new BadRequestError("Invalid credentials.");
+    throw new RequestError(ErrorTypes.InvalidCredentials);
   }
 
   /**

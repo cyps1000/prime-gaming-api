@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { Admin, User, Whitelist } from "../models";
 
 /**
  * Enables access to .env
@@ -16,6 +17,7 @@ let mongo: any;
  * Sets up mongodb before all tests
  */
 beforeAll(async () => {
+  process.env.JWT_KEY = "testJWT_KEY";
   mongo = new MongoMemoryServer();
   const mongoUri = await mongo.getUri();
 

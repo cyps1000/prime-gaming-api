@@ -3,9 +3,9 @@ import { PasswordManager } from "../services/password-manager";
 
 /**
  * An interface that describes the properties
- * that are required to create a new user
+ * that are required to create a new document
  */
-interface AdminAttributes {
+export interface AdminAttributes {
   username: string;
   password: string;
   role: "prime-admin";
@@ -13,9 +13,9 @@ interface AdminAttributes {
 
 /**
  * An interface that describes the properties
- * that a user document has
+ * that a document has
  */
-interface AdminDocument extends mongoose.Document {
+export interface AdminDocument extends mongoose.Document {
   username: string;
   password: string;
   role: "prime-admin";
@@ -23,14 +23,14 @@ interface AdminDocument extends mongoose.Document {
 
 /**
  * An interface that describes the properties
- * that a user model has
+ * that a model has
  */
-interface AdminModel extends mongoose.Model<AdminDocument> {
+export interface AdminModel extends mongoose.Model<AdminDocument> {
   build(attributes: AdminAttributes): AdminDocument;
 }
 
 /**
- * Builds the user schema
+ * Builds the schema
  */
 const adminSchema = new mongoose.Schema(
   {
@@ -60,6 +60,9 @@ const adminSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Pre-save hook
+ */
 adminSchema.pre("save", async function (done) {
   if (this.isModified("password")) {
     const hashed = await PasswordManager.hash(this.get("password"));
@@ -69,10 +72,16 @@ adminSchema.pre("save", async function (done) {
   done();
 });
 
+/**
+ * Adds a static method on the model which is used to create a new docment
+ */
 adminSchema.statics.build = (attributes: AdminAttributes) => {
   return new Admin(attributes);
 };
 
+/**
+ * Defines the model
+ */
 const Admin = mongoose.model<AdminDocument, AdminModel>("Admin", adminSchema);
 
 export { Admin };

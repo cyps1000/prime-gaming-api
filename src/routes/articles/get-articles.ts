@@ -1,28 +1,14 @@
 import { Request, Response, RequestHandler } from "express";
-import { body } from "express-validator";
-import { Article } from "../../models/Article";
-import jwt from "jsonwebtoken";
-import {
-  validateRequest,
-  requireAuth,
-  requireUserAuth,
-  requireAdminAuth,
-} from "../../middlewares";
-import { BadRequestError } from "../../services/error";
+import { requireAdminAuth, requireAuth } from "../../middlewares";
 
-const requestValidation = [
-  body("email").isEmail().withMessage("Email must be valid"),
-  body("firstName")
-    .not()
-    .isEmpty()
-    .withMessage("Please provide your first name"),
-  body("lastName").not().isEmpty().withMessage("Please provide your last name"),
-  body("password")
-    .trim()
-    .isLength({ min: 4, max: 20 })
-    .withMessage("Password must be between 4 and 20 characters"),
-];
+/**
+ * Imports models
+ */
+import { Article } from "../../models";
 
+/**
+ * Handles getting the articles
+ */
 const getArticles = async (req: Request, res: Response) => {
   const pageOptions: {
     page: number;
@@ -69,6 +55,6 @@ const getArticles = async (req: Request, res: Response) => {
 /**
  * Defines the controller
  */
-const getArticlesController: RequestHandler[] = [requireUserAuth, getArticles];
+const getArticlesController: RequestHandler[] = [requireAuth, getArticles];
 
 export { getArticlesController };

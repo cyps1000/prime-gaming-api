@@ -4,11 +4,7 @@ import { Article } from "../../models/Article";
 import { Admin } from "../../models/Admin";
 import jwt from "jsonwebtoken";
 import { validateRequest, requireAuth, currentUser } from "../../middlewares";
-import {
-  BadRequestError,
-  NotAuthorizedError,
-  NotFoundError,
-} from "../../services/error";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 const requestValidation = [
   body("email").isEmail().withMessage("Email must be valid"),
@@ -25,15 +21,15 @@ const requestValidation = [
 
 const updateArticle = async (req: Request, res: Response) => {
   const { title, content } = req.body;
-  const isAdmin = await Admin.findById(req.currentUser!.id);
+  const isAdmin = await Admin.findById(req.currentUser!);
 
   if (!isAdmin) {
-    throw new NotAuthorizedError();
+    throw new RequestError(ErrorTypes.NotAuthorized);
   }
 
   const article = await Article.findById(req.params.id);
 
-  if (!article) throw new NotFoundError();
+  if (!article) throw new RequestError(ErrorTypes.ResourceNotFound);
 
   article.title = title;
   article.content = content;

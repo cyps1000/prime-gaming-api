@@ -52,7 +52,8 @@ import { validateRequest, requireAuth, currentUser } from "../../middlewares";
 /**
  * Imports services
  */
-import { BadRequestError } from "../../services/error";
+
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Defines the request validation
@@ -81,12 +82,12 @@ const createComment = async (req: Request, res: Response) => {
   const foundArticle = await Article.findById(articleId);
 
   if (!foundArticle) {
-    throw new BadRequestError("Article not found");
+    throw new RequestError(ErrorTypes.ResourceNotFound);
   }
 
   const comment = Comment.build({
     content,
-    userId: req.currentUser!.id,
+    userId: req.currentUser!,
     articleId: foundArticle.id,
   });
 

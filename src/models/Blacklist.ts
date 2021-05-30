@@ -2,70 +2,48 @@ import mongoose from "mongoose";
 
 /**
  * An interface that describes the properties
- * that are required to create a new user
+ * that are required to create a new document
  */
-interface BlacklistAttributes {
-  type: "ip" | "token";
-  ip?: string;
-  expiresAt: Date;
-  token?: {
-    id: string;
-    role?: string;
-    tkId: string;
-    iat: number;
-    exp: number;
-    refreshToken: string;
-  };
+export interface BlacklistAttributes {
+  origin: string;
 }
 
 /**
  * An interface that describes the properties
- * that a user document has
+ * that a document has
  */
-interface BlacklistDocument extends mongoose.Document {
-  type: "ip" | "token";
-  expiresAt: Date;
-  ip?: string;
-  token?: string;
+export interface BlacklistDocument extends mongoose.Document {
+  origin: string;
 }
 
 /**
  * An interface that describes the properties
- * that a user model has
+ * that a model has
  */
-interface BlacklistModel extends mongoose.Model<BlacklistDocument> {
+export interface BlacklistModel extends mongoose.Model<BlacklistDocument> {
   build(attributes: BlacklistAttributes): BlacklistDocument;
 }
 
+/**
+ * Builds the schema
+ */
 const blacklistSchema = new mongoose.Schema({
-  type: {
+  origin: {
     type: String,
     required: true,
-    enum: ["ip", "token"],
-    default: "ip",
-  },
-  expiresAt: Date,
-  ip: {
-    type: String,
-  },
-  token: {
-    type: {
-      id: String,
-      role: String,
-      tkId: String,
-      iat: Number,
-      exp: Number,
-      refreshToken: String,
-    },
   },
 });
 
-blacklistSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
+/**
+ * Adds a static method on the model which is used to create a new docment
+ */
 blacklistSchema.statics.build = (attributes: BlacklistAttributes) => {
   return new Blacklist(attributes);
 };
 
+/**
+ * Defines the model
+ */
 const Blacklist = mongoose.model<BlacklistDocument, BlacklistModel>(
   "Blacklist",
   blacklistSchema

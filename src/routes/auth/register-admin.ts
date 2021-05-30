@@ -20,22 +20,27 @@ import { Admin } from "../../models";
 /**
  * Imports services
  */
-import { BadRequestError } from "../../services/error";
+
 import { AuthService } from "../../services/auth";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Defines the request validation middleware
  */
 const requestValidation = [
-  body("username")
-    .trim()
+  body("username").not().isEmpty().withMessage("Please provide your username"),
+  body("password")
     .not()
     .isEmpty()
-    .withMessage("Please provide your username"),
-  body("password")
-    .trim()
-    .not()
-    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,}$/, "i")
+    .withMessage("Please provide your password")
+    .bail()
+    .isLength({ min: 10 })
+    .withMessage("Password must be at least 10 characters long.")
+    .bail()
+    .matches(
+      /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/,
+      "g"
+    )
     .withMessage(
       "Password must include one lowercase character, one uppercase character, a number, and a special character."
     ),
@@ -46,16 +51,13 @@ const requestValidation = [
  */
 const registerAdmin = async (req: Request, res: Response) => {
   const { username, password } = req.body;
-
   /**
    * Checks if any admins exist
    */
   const existingAdmin = await Admin.findOne({});
 
   if (existingAdmin) {
-    throw new BadRequestError(
-      "An admin account already exists, contact your system administrator."
-    );
+    throw new RequestError(ErrorTypes.AdminExists);
   }
 
   /**

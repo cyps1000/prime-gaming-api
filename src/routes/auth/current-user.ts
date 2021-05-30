@@ -47,27 +47,27 @@ import { Admin, User } from "../../models";
 /**
  * Imports services
  */
-import { BadRequestError, NotAuthorizedError } from "../../services/error";
+import { RequestError, ErrorTypes } from "../../services/error";
 
 /**
  * Handles getting the current user
  */
 const getCurrentUser = async (req: Request, res: Response) => {
   if (!req.token) {
-    throw new NotAuthorizedError();
+    throw new RequestError(ErrorTypes.NotAuthorized);
   }
 
   if (req.token.role === "prime-admin") {
     const admin = await Admin.findById(req.token.id);
     if (admin) return res.send(admin);
 
-    throw new BadRequestError("Account not found");
+    throw new RequestError(ErrorTypes.AccountNotFound);
   }
 
   const user = await User.findById(req.token.id);
   if (user) return res.send(user);
 
-  throw new BadRequestError("Account not found");
+  throw new RequestError(ErrorTypes.AccountNotFound);
 };
 
 /**

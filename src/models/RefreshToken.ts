@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 /**
  * An interface that describes the properties
- * that are required to create a new user
+ * that are required to create a new document
  */
 export interface RefreshTokenAttributes {
   user: string;
@@ -14,9 +14,9 @@ export interface RefreshTokenAttributes {
 
 /**
  * An interface that describes the properties
- * that a user document has
+ * that a document has
  */
-interface RefreshTokenDocument extends mongoose.Document {
+export interface RefreshTokenDocument extends mongoose.Document {
   user: string;
   tokenId: string;
   expiresAt: Date;
@@ -26,12 +26,16 @@ interface RefreshTokenDocument extends mongoose.Document {
 
 /**
  * An interface that describes the properties
- * that a user model has
+ * that a model has
  */
-interface RefreshTokenModel extends mongoose.Model<RefreshTokenDocument> {
+export interface RefreshTokenModel
+  extends mongoose.Model<RefreshTokenDocument> {
   build(attributes: RefreshTokenAttributes): RefreshTokenDocument;
 }
 
+/**
+ * Builds the schema
+ */
 const refreshTokenSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -53,12 +57,23 @@ const refreshTokenSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Creates an index on the expiresAt attribute
+ * @expireAfterSeconds 0 because we dynamically set a TTL to a document
+ * @see https://docs.mongodb.com/manual/tutorial/expire-data/#expire-documents-at-a-certain-clock-time
+ */
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+/**
+ * Adds a static method on the model which is used to create a new docment
+ */
 refreshTokenSchema.statics.build = (attributes: RefreshTokenAttributes) => {
   return new RefreshToken(attributes);
 };
 
+/**
+ * Defines the model
+ */
 const RefreshToken = mongoose.model<RefreshTokenDocument, RefreshTokenModel>(
   "RefreshToken",
   refreshTokenSchema

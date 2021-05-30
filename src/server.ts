@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 /**
  * Imports services
  */
-import { NotFoundError } from "./services/error";
+import { RequestError, ErrorTypes } from "./services/error";
 
 /**
  * Imports middlewares
@@ -20,7 +20,7 @@ import { errorHandler, blacklistHandler } from "./middlewares";
 /**
  * Imports Services
  */
-import { setupCors } from "./services/cors";
+import { CorsService } from "./services/cors";
 
 /**
  * Imports routes
@@ -35,9 +35,10 @@ import { commentsRouter } from "./routes/comments";
 dotenv.config();
 
 /**
- * Creates the express app
+ * Creates the express server
  */
-const app = express();
+const server = express();
+server.set("trust proxy", true);
 
 /**
  * Defines the api version
@@ -47,52 +48,52 @@ const apiVersion = "/v1";
 /**
  * Sets up cors
  */
-app.use(setupCors());
+// server.use(CorsService.setup());
 
 /**
  * Middlewares
  */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+server.use(express.json());
+server.use(express.urlencoded({ extended: true }));
 
 /**
  * Blacklist
  */
-app.use(blacklistHandler);
+server.use(blacklistHandler);
 
 /**
  * Auth Router
  */
-app.use(apiVersion, authRouter);
+server.use(apiVersion, authRouter);
 
 /**
  * Articles Router
  */
-app.use(apiVersion, articlesRouter);
+server.use(apiVersion, articlesRouter);
 
 /**
  * Comments Router
  */
-app.use(apiVersion, commentsRouter);
+server.use(apiVersion, commentsRouter);
 
 /**
  * Sets up the api docs route (only in development)
  */
 if (process.env.NODE_ENV !== "production") {
-  app.use("/docs", express.static(path.join(__dirname, "docs")));
+  // server.use("/docs", express.static(path.join(__dirname, "docs")));
 }
 
 /**
  * Catch all route
  */
-app.all("*", async () => {
-  throw new NotFoundError();
+server.all("*", async () => {
+  throw new RequestError(ErrorTypes.RouteNotFound);
 });
 
 /**
  * Error handler, must be placed last
  * If any errors are thrown, this handler will be able to catch them
  */
-app.use(errorHandler);
+server.use(errorHandler);
 
-export { app };
+export { server };

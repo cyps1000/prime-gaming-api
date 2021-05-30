@@ -3,7 +3,6 @@ import { body } from "express-validator";
 import { Comment } from "../../models/Comment";
 import jwt from "jsonwebtoken";
 import { validateRequest, requireAuth } from "../../middlewares";
-import { BadRequestError } from "../../services/error";
 
 const requestValidation = [
   body("email").isEmail().withMessage("Email must be valid"),
