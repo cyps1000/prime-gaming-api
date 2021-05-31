@@ -12,9 +12,6 @@
     "apidoc": "apidoc -i src/routes/ -o src/docs && npm run open",
     "open": "start http://localhost:3001/docs"
   },
-  "lint-staged": {
-    "src/**/*.{js,ts,json,md}": "prettier --write"
-  },
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
@@ -84,7 +81,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run test-coverage && lint-staged"
+      "pre-commit": "npm run test-coverage"
     }
   }
 }
