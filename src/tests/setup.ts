@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { Admin, User, Whitelist } from "../models";
 
 /**
  * Enables access to .env

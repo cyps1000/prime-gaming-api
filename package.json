@@ -7,16 +7,31 @@
     "prepare": "husky install",
     "start": "ts-node-dev --poll src/index.ts",
     "test-dev": "jest --watchAll --no-cache",
+    "test-coverage": "jest --collectCoverage --no-cache",
     "test": "jest --no-cache",
     "apidoc": "apidoc -i src/routes/ -o src/docs && npm run open",
     "open": "start http://localhost:3001/docs"
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts,json,md}": "prettier --write"
   },
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
       "./src/tests/setup.ts"
-    ]
+    ],
+    "collectCoverageFrom": [
+      "./src/routes/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 35,
+        "functions": 35,
+        "lines": 35,
+        "statements": 35
+      }
+    }
   },
   "repository": {
     "type": "git",
@@ -69,7 +84,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm test"
+      "pre-commit": "npm run test-coverage && lint-staged"
     }
   }
 }

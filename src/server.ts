@@ -48,7 +48,7 @@ const apiVersion = "/v1";
 /**
  * Sets up cors
  */
-// server.use(CorsService.setup());
+server.use(CorsService.setup());
 
 /**
  * Middlewares
@@ -80,7 +80,7 @@ server.use(apiVersion, commentsRouter);
  * Sets up the api docs route (only in development)
  */
 if (process.env.NODE_ENV !== "production") {
-  // server.use("/docs", express.static(path.join(__dirname, "docs")));
+  server.use("/docs", express.static(path.join(__dirname, "docs")));
 }
 
 /**
