@@ -7,14 +7,28 @@
     "prepare": "husky install",
     "start": "ts-node-dev --poll src/index.ts",
     "test-dev": "jest --watchAll --no-cache",
-    "test": "jest --no-cache"
+    "test-coverage": "jest --collectCoverage --no-cache --detectOpenHandles",
+    "test": "jest --no-cache --detectOpenHandles",
+    "generate-apidoc": "apidoc -i src/routes/ -o src/docs && npm run open",
+    "open": "start http://localhost:3001/docs"
   },
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
       "./src/tests/setup.ts"
-    ]
+    ],
+    "collectCoverageFrom": [
+      "./src/routes/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 35,
+        "functions": 35,
+        "lines": 35,
+        "statements": 35
+      }
+    }
   },
   "repository": {
     "type": "git",
@@ -25,10 +39,23 @@
   "bugs": {
     "url": "https://github.com/cyps1000/prime-gaming-api/issues"
   },
+  "apidoc": {
+    "title": "Prime Gaming API",
+    "url": "https://prime-gaming-api.herokuapp.com/v1",
+    "sampleUrl": true,
+    "template": {
+      "withCompare": true,
+      "withGenerator": true
+    }
+  },
   "homepage": "https://github.com/cyps1000/prime-gaming-api#readme",
   "devDependencies": {
+    "@types/faker": "^5.5.5",
     "@types/jest": "^26.0.22",
     "@types/supertest": "^2.0.11",
+    "apidoc": "^0.28.1",
+    "faker": "^5.5.3",
+    "http-server": "^0.12.3",
     "husky": "^6.0.0",
     "jest": "^26.6.3",
     "lint-staged": "^10.5.4",
@@ -39,19 +66,23 @@
   "dependencies": {
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.11",
+    "@types/jsonwebtoken": "^8.5.1",
     "@types/mongoose": "^5.10.5",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
     "express-validator": "^6.10.0",
+    "helmet": "^4.6.0",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.5",
+    "redoc": "^2.0.0-rc.53",
     "ts-node-dev": "^1.1.6",
     "typescript": "^4.2.4"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm test"
+      "pre-commit": "npm run test-coverage"
     }
   }
 }

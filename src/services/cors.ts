@@ -1,8 +1,7 @@
 /**
  * External Imports
  */
-import cors, { CorsOptions } from "cors";
-import { Express } from "express";
+import cors, { CorsOptionsDelegate } from "cors";
 
 /**
  * Imports Models
@@ -10,49 +9,45 @@ import { Express } from "express";
 import { Whitelist } from "../models/Whitelist";
 
 /**
- * Handles setting up cors
+ * Checks if the origin is allowed
  */
-export const setupCors = async (app: Express) => {
-  try {
-    const collection = await Whitelist.find({});
-    const whitelist = collection.map((item) => item.origin);
+const isAllowedOrigin = (origin: string | undefined, whitelist: string[]) => {
+  if (process.env.NODE_ENV === "development" && !origin) return false;
 
-    /**
-     * Defines the allowed methods
-     */
-    const allowedMethods = "GET,HEAD,PUT,PATCH,POST,DELETE";
+  return whitelist.indexOf(origin!) !== -1;
+};
 
-    /**
-     * Defines the static origin and custom origin types
-     */
-    type StaticOrigin = boolean | string | RegExp | (string | RegExp)[];
-    type CustomOrigin = (
-      requestOrigin: string | undefined,
-      callback: (err: Error | null, origin?: StaticOrigin) => void
-    ) => void;
+/**
+ * Defines the Cors Service
+ */
+export class CorsService {
+  static setup() {
+    const corsOptionsDelegate: CorsOptionsDelegate = async (req, callback) => {
+      /**
+       * Gets the whitelist
+       */
+      const collection = await Whitelist.find({});
+      const whitelist = collection.map((item) => item.origin);
 
-    /**
-     * Handles the cors based on request origin
-     */
-    const handleOrigin: CustomOrigin = (origin, callback) => {
-      if (!origin || whitelist.indexOf(origin) !== -1) {
-        return callback(null, true);
+      /**
+       * Defines the cors options
+       */
+      const options = {
+        origin: false,
+        methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+        allowedHeaders: ["Origin", "Content-Type", "Accept", "Authorization"],
+      };
+
+      /**
+       * Checks if the origin is allowed
+       */
+      if (isAllowedOrigin(req.headers.origin, whitelist)) {
+        options["origin"] = true;
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      callback(null, options);
     };
 
-    /**
-     * Defines the cors options
-     */
-    const corsOptions: CorsOptions = {
-      methods: allowedMethods,
-      origin: handleOrigin,
-    };
-
-    app.use(cors(corsOptions));
-  } catch (error) {
-    console.error(error);
-    throw new Error("Something went wrong during cors setup.");
+    return cors(corsOptionsDelegate);
   }
-};
+}
