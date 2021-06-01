@@ -8,7 +8,6 @@ export interface RefreshTokenAttributes {
   user: string;
   tokenId: string;
   expiresAt: Date;
-  createdAt?: Date;
   createdByIp: string;
 }
 
@@ -20,8 +19,9 @@ export interface RefreshTokenDocument extends mongoose.Document {
   user: string;
   tokenId: string;
   expiresAt: Date;
-  createdAt: Date;
   createdByIp: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -41,7 +41,6 @@ const refreshTokenSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     tokenId: String,
     expiresAt: Date,
-    createdAt: { type: Date, default: Date.now },
     createdByIp: String,
   },
   {
@@ -54,6 +53,7 @@ const refreshTokenSchema = new mongoose.Schema(
         delete ret.user;
       },
     },
+    timestamps: true,
   }
 );
 

@@ -8,8 +8,8 @@
     "start": "ts-node-dev --poll src/index.ts",
     "test-dev": "jest --watchAll --no-cache",
     "test-coverage": "jest --collectCoverage --no-cache",
-    "test": "jest --no-cache",
-    "apidoc": "apidoc -i src/routes/ -o src/docs && npm run open",
+    "test": "jest --no-cache --detectOpenHandles",
+    "generate-apidoc": "apidoc -i src/routes/ -o src/docs && npm run open",
     "open": "start http://localhost:3001/docs"
   },
   "jest": {
@@ -73,6 +73,7 @@
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
     "express-validator": "^6.10.0",
+    "helmet": "^4.6.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.5",
     "redoc": "^2.0.0-rc.53",

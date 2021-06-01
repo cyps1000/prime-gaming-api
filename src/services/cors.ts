@@ -12,9 +12,9 @@ import { Whitelist } from "../models/Whitelist";
  * Checks if the origin is allowed
  */
 const isAllowedOrigin = (origin: string | undefined, whitelist: string[]) => {
-  if (!origin) return false;
+  if (process.env.NODE_ENV === "development" && !origin) return false;
 
-  return whitelist.indexOf(origin) !== -1;
+  return whitelist.indexOf(origin!) !== -1;
 };
 
 /**

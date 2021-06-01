@@ -1,29 +1,25 @@
 /**
- * @api {POST} /auth/register  POST - Register User
- * @apiVersion 1.0.0
- * @apiName PostRegisterUser
- * @apiGroup Auth
+ * @see src\routes\auth\docs\register.doc.ts
  */
-import mongoose from "mongoose";
 import { Request, Response, RequestHandler } from "express";
 
 /**
  * Imports middlewares
  */
 import { body } from "express-validator";
-import { validateRequest } from "../../middlewares";
+import { validateRequest } from "../../../middlewares";
 
 /**
  * Imports models
  */
-import { User, RefreshToken } from "../../models";
+import { User } from "../../../models";
 
 /**
  * Imports services
  */
 
-import { AuthService } from "../../services/auth";
-import { RequestError, ErrorTypes } from "../../services/error";
+import { AuthService } from "../../../services/auth";
+import { RequestError, ErrorTypes } from "../../../services/error";
 
 /**
  * Defines the request validation middleware

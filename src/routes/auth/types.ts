@@ -1,3 +1,6 @@
+/**
+ * Defines the Access Token Interface
+ */
 export interface AccessToken {
   id: string;
   role?: string;

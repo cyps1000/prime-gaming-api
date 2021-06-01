@@ -5,13 +5,12 @@ import mongoose from "mongoose";
  * that are required to create a new document
  */
 export interface CommentAttributes {
-  userId: string;
+  user: string;
   articleId: string;
   content: string;
   moderatedContent?: string;
   moderated?: boolean;
   banned?: boolean;
-  createdAt?: Date;
 }
 
 /**
@@ -19,13 +18,14 @@ export interface CommentAttributes {
  * that a document has
  */
 export interface CommentDocument extends mongoose.Document {
-  userId: string;
+  user: string;
   articleId: string;
   content: string;
   moderatedContent?: string;
-  moderated?: boolean;
-  banned?: boolean;
-  createdAt?: Date;
+  moderated: boolean;
+  banned: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -41,7 +41,7 @@ export interface CommentModel extends mongoose.Model<CommentDocument> {
  */
 const commentSchema = new mongoose.Schema(
   {
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -58,10 +58,11 @@ const commentSchema = new mongoose.Schema(
     },
     moderated: {
       type: Boolean,
+      default: false,
     },
-    createdAt: {
-      type: Date,
-      default: new Date(),
+    banned: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -72,6 +73,7 @@ const commentSchema = new mongoose.Schema(
         delete ret._id;
       },
     },
+    timestamps: true,
   }
 );
 

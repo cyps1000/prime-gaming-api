@@ -1,8 +1,5 @@
 /**
- * @api {POST} /auth/register-admin  POST - Register Admin
- * @apiVersion 1.0.0
- * @apiName PostRegisterAdmin
- * @apiGroup Auth
+ * @see src\routes\auth\docs\register-admin.doc.ts
  */
 import { Request, Response, RequestHandler } from "express";
 
@@ -10,29 +7,28 @@ import { Request, Response, RequestHandler } from "express";
  * Imports middlewares
  */
 import { body } from "express-validator";
-import { validateRequest } from "../../middlewares";
+import { validateRequest } from "../../../middlewares";
 
 /**
  * Imports models
  */
-import { Admin } from "../../models";
+import { Admin } from "../../../models";
 
 /**
  * Imports services
  */
-
-import { AuthService } from "../../services/auth";
-import { RequestError, ErrorTypes } from "../../services/error";
+import { AuthService } from "../../../services/auth";
+import { RequestError, ErrorTypes } from "../../../services/error";
 
 /**
  * Defines the request validation middleware
  */
 const requestValidation = [
-  body("username").not().isEmpty().withMessage("Please provide your username"),
+  body("username").not().isEmpty().withMessage("Please provide your username."),
   body("password")
     .not()
     .isEmpty()
-    .withMessage("Please provide your password")
+    .withMessage("Please provide a password.")
     .bail()
     .isLength({ min: 10 })
     .withMessage("Password must be at least 10 characters long.")

@@ -33,6 +33,7 @@ declare global {
      * Expands the Process env interface
      */
     interface ProcessEnv {
+      NODE_ENV: "development" | "production" | "testing";
       JWT_KEY: string;
       MONGO_URI: string;
       PORT: string;

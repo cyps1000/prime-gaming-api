@@ -1,17 +1,42 @@
 import express from "express";
-import { getArticlesController } from "./get-articles";
-import { getArticleController } from "./get-article";
-import { createArticleController } from "./create-article";
-import { updateArticleController } from "./update-article";
-import { deleteArticleController } from "./delete-article";
 
+/**
+ * Imports Controllers
+ */
+import { createArticleController } from "./controllers/create-article";
+import { getArticleController } from "./controllers/get-article";
+import { deleteArticleController } from "./controllers/delete-article";
+import { updateArticleController } from "./controllers/update-article";
+import { getArticlesController } from "./controllers/get-articles";
+
+/**
+ * Defines the router
+ */
 const router = express.Router();
 
-router.get("/articles", getArticlesController);
+/**
+ * Creates a new article
+ */
+router.post("/articles", createArticleController);
+
+/**
+ * Gets an article by id
+ */
 router.get("/articles/:id", getArticleController);
-router.put("/articles/:id", updateArticleController);
+
+/**
+ * Deletes an article by id
+ */
 router.delete("/articles/:id", deleteArticleController);
 
-router.post("/articles", createArticleController);
+/**
+ * Updates an article by id
+ */
+router.put("/articles/:id", updateArticleController);
+
+/**
+ * Gets a list of articles
+ */
+router.get("/articles", getArticlesController);
 
 export { router as articlesRouter };

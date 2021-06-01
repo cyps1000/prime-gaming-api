@@ -14,6 +14,8 @@ export interface BlacklistAttributes {
  */
 export interface BlacklistDocument extends mongoose.Document {
   origin: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -27,12 +29,17 @@ export interface BlacklistModel extends mongoose.Model<BlacklistDocument> {
 /**
  * Builds the schema
  */
-const blacklistSchema = new mongoose.Schema({
-  origin: {
-    type: String,
-    required: true,
+const blacklistSchema = new mongoose.Schema(
+  {
+    origin: {
+      type: String,
+      required: true,
+    },
   },
-});
+  {
+    timestamps: true,
+  }
+);
 
 /**
  * Adds a static method on the model which is used to create a new docment

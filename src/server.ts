@@ -6,6 +6,7 @@ import "express-async-errors";
  * External Imports
  */
 import dotenv from "dotenv";
+import helmet from "helmet";
 
 /**
  * Imports services
@@ -55,6 +56,7 @@ server.use(CorsService.setup());
  */
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
+// server.use(helmet());
 
 /**
  * Blacklist

@@ -19,6 +19,8 @@ export interface AdminDocument extends mongoose.Document {
   username: string;
   password: string;
   role: "prime-admin";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -57,6 +59,7 @@ const adminSchema = new mongoose.Schema(
         delete ret.password;
       },
     },
+    timestamps: true,
   }
 );
 

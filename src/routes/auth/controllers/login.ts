@@ -1,31 +1,5 @@
 /**
- * @api {POST} /auth/login  POST - Login User
- * @apiVersion 1.0.0
- * @apiName PostLoginUser
- * @apiGroup Auth
- * @apiSampleRequest off
- * @apiDescription
- *  Log in as a user
- * @apiParamExample  Example request
-    {
-        "email": "john@test.com",
-        "password": "myweakpassword"
-    }
- * @apiParam {String} email Email - required.
- * @apiParam {String} password Password - required.
- * @apiSuccessExample Example response
-    {
-        "email": "john@test.com",
-        "firstName": "John",
-        "lastName": "Dixon",
-        "id": "60a9ea51489ee6170cd87a06"
-    }
- * @apiSuccess {String} email Email
- * @apiSuccess {String} firstName  First name
- * @apiSuccess {String} lastName  Last name
- * @apiSuccess {String} id MongoDB _id
- * @apiError (Error 400 - Bad Request)  EmailEmpty <code>Please provide your email.</code>
- * @apiError (Error 400 - Bad Request) InvalidCredentials <code>Invalid credentials.</code> 
+ * @see src\routes\auth\docs\login.doc.ts
  */
 import { Request, Response, RequestHandler } from "express";
 
@@ -33,20 +7,20 @@ import { Request, Response, RequestHandler } from "express";
  * Imports middlewares
  */
 import { body } from "express-validator";
-import { validateRequest } from "../../middlewares";
+import { validateRequest } from "../../../middlewares";
 
 /**
  * Imports models
  */
-import { User } from "../../models";
+import { User } from "../../../models";
 
 /**
  * Imports services
  */
 
-import { AuthService } from "../../services/auth";
-import { PasswordManager } from "../../services/password-manager";
-import { RequestError, ErrorTypes } from "../../services/error";
+import { AuthService } from "../../../services/auth";
+import { PasswordManager } from "../../../services/password-manager";
+import { RequestError, ErrorTypes } from "../../../services/error";
 
 /**
  * Defines the request validation middleware

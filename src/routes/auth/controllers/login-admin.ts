@@ -1,29 +1,5 @@
 /**
- * @api {POST} /auth/login-admin  POST - Login Admin
- * @apiVersion 1.0.0
- * @apiName PostLoginAdmin
- * @apiGroup Auth
- * @apiSampleRequest off
- * @apiDescription
- *  Log in as an admin
- * @apiParamExample  Example request
-    {
-        "username": "iamrootgroot",
-        "password": "B2hQXHluXA2Ta2F$"
-    }
- * @apiParam {String} username Username - required.
- * @apiParam {String} password Password - required.
- * @apiSuccessExample Example response
- * {
- *   "username": "iamrootgroot",
- *   "role": "prime-admin",
- *   "id": "60a967d88a5d2d522c0d3111"
- *  }
- * @apiSuccess {String} username Username
- * @apiSuccess {String} role Role of prime-admin
- * @apiSuccess {String} id MongoDB _id
- * @apiError (Error 400 - Bad Request)  UsernameEmpty <code>Please provide your username.</code>
- * @apiError (Error 400 - Bad Request) InvalidCredentials <code>Invalid credentials.</code> 
+ * @see src\routes\auth\docs\login-admin.doc.ts
  */
 import { Request, Response, RequestHandler } from "express";
 
@@ -31,20 +7,20 @@ import { Request, Response, RequestHandler } from "express";
  * Imports middlewares
  */
 import { body } from "express-validator";
-import { validateRequest } from "../../middlewares";
+import { validateRequest } from "../../../middlewares";
 
 /**
  * Imports models
  */
-import { Admin } from "../../models";
+import { Admin } from "../../../models";
 
 /**
  * Imports services
  */
 
-import { AuthService } from "../../services/auth";
-import { PasswordManager } from "../../services/password-manager";
-import { RequestError, ErrorTypes } from "../../services/error";
+import { AuthService } from "../../../services/auth";
+import { PasswordManager } from "../../../services/password-manager";
+import { RequestError, ErrorTypes } from "../../../services/error";
 
 /**
  * Defines the request validation middleware

@@ -7,7 +7,6 @@ import mongoose from "mongoose";
 export interface ArticleAttributes {
   title: string;
   content: string;
-  createdAt?: Date;
   likes?: string[];
   shares?: string[];
   comments?: string[];
@@ -21,11 +20,12 @@ export interface ArticleAttributes {
 export interface ArticleDocument extends mongoose.Document {
   title: string;
   content: string;
-  createdAt: Date;
   likes: string[];
   shares: string[];
   comments: string[];
   author: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -67,10 +67,6 @@ const articleSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
     },
-    createdAt: {
-      type: Date,
-      default: new Date(),
-    },
   },
   {
     toJSON: {
@@ -80,6 +76,7 @@ const articleSchema = new mongoose.Schema(
         delete ret._id;
       },
     },
+    timestamps: true,
   }
 );
 

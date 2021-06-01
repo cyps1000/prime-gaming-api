@@ -108,6 +108,12 @@ export enum ErrorTypes {
    * Special case, used in the validate-requests middleware
    */
   InputValidation = "InputValidation",
+
+  /**
+   * @statusCode 400
+   * @message Please provide a valid object id.
+   */
+  InvalidObjectID = "InvalidObjectID",
 }
 
 /**
@@ -282,6 +288,14 @@ const buildRequestError = (errorType: ErrorTypes) => {
     case ErrorTypes.InputValidation:
       statusCode = 400;
       message = "";
+      break;
+
+    /**
+     * Invalid Object ID
+     */
+    case ErrorTypes.InvalidObjectID:
+      statusCode = 400;
+      message = "Please provide a valid object id.";
       break;
 
     /**

@@ -3,13 +3,13 @@ import express from "express";
 /**
  * Imports Controllers
  */
-import { currentUserController } from "./current-user";
-import { logoutController } from "./logout";
-import { loginController } from "./login";
-import { registerController } from "./register";
-import { loginAdminController } from "./login-admin";
-import { registerAdminController } from "./register-admin";
-import { refreshTokenController } from "./refresh-token";
+import { currentUserController } from "./controllers/current-user";
+import { logoutController } from "./controllers/logout";
+import { loginController } from "./controllers/login";
+import { registerController } from "./controllers/register";
+import { loginAdminController } from "./controllers/login-admin";
+import { registerAdminController } from "./controllers/register-admin";
+import { refreshTokenController } from "./controllers/refresh-token";
 
 /**
  * Defines the router

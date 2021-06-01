@@ -14,6 +14,8 @@ export interface WhitelistAttributes {
  */
 export interface WhitelistDocument extends mongoose.Document {
   origin: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -27,12 +29,17 @@ export interface WhitelistModel extends mongoose.Model<WhitelistDocument> {
 /**
  * Builds the schema
  */
-const whitelistSchema = new mongoose.Schema({
-  origin: {
-    type: String,
-    required: true,
+const whitelistSchema = new mongoose.Schema(
+  {
+    origin: {
+      type: String,
+      required: true,
+    },
   },
-});
+  {
+    timestamps: true,
+  }
+);
 
 /**
  * Adds a static method on the model which is used to create a new docment

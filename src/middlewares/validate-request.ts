@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { validationResult } from "express-validator";
+import mongoose from "mongoose";
 
 /**
  * Imports services
@@ -20,6 +21,10 @@ export const validateRequest = (
     throw new RequestError(ErrorTypes.InputValidation, {
       errors: errors.array(),
     });
+  }
+
+  if (req.params.id && !mongoose.isValidObjectId(req.params.id)) {
+    throw new RequestError(ErrorTypes.InvalidObjectID);
   }
 
   next();

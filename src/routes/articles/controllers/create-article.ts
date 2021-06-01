@@ -1,3 +1,6 @@
+/**
+ * @see src\routes\articles\docs\create-article.doc.ts
+ */
 import { Request, Response, RequestHandler } from "express";
 
 /**
@@ -8,20 +11,29 @@ import {
   requireAdminAuth,
   currentUser,
   validateRequest,
-} from "../../middlewares";
+} from "../../../middlewares";
 
 /**
  * Imports models
  */
-import { Article } from "../../models";
+import { Article } from "../../../models";
 
+/**
+ * Defines the request validation middleware
+ */
 const requestValidation = [
   body("title").not().isEmpty().withMessage("Please provide a title"),
 ];
 
+/**
+ * Handles creating a new article
+ */
 const createArticle = async (req: Request, res: Response) => {
   const { title, content } = req.body;
 
+  /**
+   * Builds an article document
+   */
   const article = Article.build({
     title,
     content,

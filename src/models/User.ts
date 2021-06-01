@@ -21,6 +21,8 @@ export interface UserDocument extends mongoose.Document {
   firstName: string;
   lastName: string;
   password: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -63,6 +65,7 @@ const userSchema = new mongoose.Schema(
         delete ret.password;
       },
     },
+    timestamps: true,
   }
 );
 

@@ -1,49 +1,42 @@
 import request from "supertest";
+
+/**
+ * Imports the server
+ */
 import { server } from "../../../server";
 
-describe("Input Validations", () => {
-  it("returns 400 if the provided inputs are not valid", async () => {
-    /**
-     * Makes the api call
-     */
-    const response = await request(server)
-      .post("/v1/auth/register")
-      .send({})
-      .expect(400);
-
-    const errors = response.body.errors;
-
-    expect(response.body.errors.length).toBe(4);
-
-    expect(errors[0].field).toBe("email");
-    expect(errors[0].message).toBe("Email must be valid");
-    expect(errors[0].errorType).toBe("InputValidation");
-
-    expect(errors[1].field).toBe("firstName");
-    expect(errors[1].message).toBe("Please provide your first name");
-    expect(errors[1].errorType).toBe("InputValidation");
-
-    expect(errors[2].field).toBe("lastName");
-    expect(errors[2].message).toBe("Please provide your last name");
-    expect(errors[2].errorType).toBe("InputValidation");
-
-    expect(errors[3].field).toBe("password");
-    expect(errors[3].message).toBe(
-      "Password must be between 4 and 20 characters"
-    );
-    expect(errors[3].errorType).toBe("InputValidation");
-  });
+/**
+ * Checks if the route handler exists
+ */
+it("has a router handler listening for requests", async () => {
+  const res = await request(server).post("/v1/auth/register").send({});
+  expect(res.status).not.toEqual(404);
 });
 
-it("has a router handler listening to /auth/register for post requests", async () => {
-  const response = await request(server).post("/v1/auth/register").send({});
-  expect(response.status).not.toEqual(404);
+it("returns 400 if the provided inputs are not valid", async () => {
+  const res = await request(server)
+    .post("/v1/auth/register")
+    .send({})
+    .expect(400);
+
+  const { errors } = res.body;
+
+  expect(errors.length).toBe(4);
+
+  expect(errors[0].field).toBe("email");
+  expect(errors[0].errorType).toBe("InputValidation");
+
+  expect(errors[1].field).toBe("firstName");
+  expect(errors[1].errorType).toBe("InputValidation");
+
+  expect(errors[2].field).toBe("lastName");
+  expect(errors[2].errorType).toBe("InputValidation");
+
+  expect(errors[3].field).toBe("password");
+  expect(errors[3].errorType).toBe("InputValidation");
 });
 
 it("returns 400 if the email is taken", async () => {
-  /**
-   * Makes the api calls
-   */
   await request(server)
     .post("/v1/auth/register")
     .send({
@@ -54,7 +47,7 @@ it("returns 400 if the email is taken", async () => {
     })
     .expect(201);
 
-  const response = await request(server)
+  const res = await request(server)
     .post("/v1/auth/register")
     .send({
       firstName: "John",
@@ -64,14 +57,10 @@ it("returns 400 if the email is taken", async () => {
     })
     .expect(400);
 
-  /**
-   * Defines the error response
-   */
-  const error = response.body.errors[0];
+  const { errors } = res.body;
 
-  expect(response.body.errors.length).toBe(1);
-  expect(error.message).toBe("Email is in use.");
-  expect(error.errorType).toBe("EmailInUse");
+  expect(errors.length).toBe(1);
+  expect(errors[0].errorType).toBe("EmailInUse");
 });
 
 it("creates a user if all the request is valid", async () => {
@@ -87,7 +76,7 @@ it("creates a user if all the request is valid", async () => {
 });
 
 it("returns an access token upon creation", async () => {
-  const response = await request(server)
+  const res = await request(server)
     .post("/v1/auth/register")
     .send({
       firstName: "John",
@@ -97,7 +86,7 @@ it("returns an access token upon creation", async () => {
     })
     .expect(201);
 
-  const { user, token } = response.body;
+  const { user, token } = res.body;
 
   expect(user).toBeDefined();
   expect(token).toBeDefined();
