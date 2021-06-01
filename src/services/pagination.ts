@@ -7,6 +7,9 @@ import dotenv from "dotenv";
  */
 dotenv.config();
 
+/**
+ * Defines the Query Param type
+ */
 export type QueryParam = string | ParsedQs | string[] | ParsedQs[] | undefined;
 
 /**
@@ -20,6 +23,20 @@ export interface PaginationOptions {
 }
 
 /**
+ * Defines the Pagination Config Interface
+ */
+export interface PaginationConfig {
+  pagination: PaginationOptions;
+  populate?: {
+    path: any;
+    select?: any;
+    model?: string | Model<any, {}> | undefined;
+    match?: any;
+    populate?: PaginationConfig["populate"];
+  };
+}
+
+/**
  * Defines the auth service
  */
 export class PaginationService {
@@ -29,44 +46,41 @@ export class PaginationService {
   static DEFAULT_ORDER_DIR = "desc";
 
   /**
+   * Handles normalizing the query param
+   */
+  static normalize(
+    query: QueryParam,
+    defaultParam: string | number,
+    formatter?: Function
+  ) {
+    if (query) {
+      const stringQuery = query.toString();
+      return formatter ? formatter(stringQuery) : stringQuery;
+    }
+    return defaultParam;
+  }
+
+  /**
    * Handles paginating the collection
    */
   static async paginate<Document extends mongoose.Document>(
     model: mongoose.Model<Document>,
-    config: {
-      pagination: PaginationOptions;
-      populate?: {
-        path: any;
-        select?: any;
-        model?: string | Model<any, {}> | undefined;
-        match?: any;
-      };
-    }
+    config: PaginationConfig
   ) {
-    const { pagination, populate } = config;
-
-    const query = pagination;
+    /**
+     * Gets the pagination and the populate from the config
+     * Renames pagination to query
+     */
+    const { pagination: query, populate } = config;
 
     /**
      * Defines the pagination options
      */
     const options = {
-      page:
-        query && query.page
-          ? parseInt(query.page.toString())
-          : this.DEFAULT_CURRENT_PAGE,
-      limit:
-        query && query.limit
-          ? parseInt(query.limit.toString())
-          : this.DEFAULT_LIMIT,
-      orderBy:
-        query && query.orderBy
-          ? query.orderBy.toString()
-          : this.DEFAULT_ORDER_BY,
-      orderDir:
-        query && query.orderDir
-          ? query.orderDir.toString()
-          : this.DEFAULT_ORDER_DIR,
+      page: this.normalize(query.page, this.DEFAULT_CURRENT_PAGE, parseInt),
+      limit: this.normalize(query.limit, this.DEFAULT_LIMIT, parseInt),
+      orderBy: this.normalize(query.orderBy, this.DEFAULT_ORDER_BY),
+      orderDir: this.normalize(query.orderDir, this.DEFAULT_ORDER_DIR),
     };
 
     /**
@@ -78,12 +92,8 @@ export class PaginationService {
      * Handles calculating the total number of pages
      */
     const calculateTotalPages = () => {
-      /**
-       * Defines the total pages
-       */
-      const totalPages = Math.floor(
-        (count + options.limit - 1) / options.limit
-      );
+      const pages = (count + options.limit - 1) / options.limit;
+      const totalPages = Math.floor(pages);
 
       return count < options.limit ? 1 : totalPages;
     };
@@ -95,6 +105,9 @@ export class PaginationService {
       [options.orderBy]: options.orderDir,
     });
 
+    /**
+     * Gets the items
+     */
     const items = await model
       .find({})
       .skip(calculateSkip())
@@ -102,8 +115,14 @@ export class PaginationService {
       .sort(getSortOrder())
       .populate(populate || undefined);
 
+    /**
+     * Gets the count
+     */
     const count = await model.countDocuments();
 
+    /**
+     * Gets the total amount of pages
+     */
     const pages = calculateTotalPages();
 
     return {

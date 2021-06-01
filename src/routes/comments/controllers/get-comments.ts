@@ -9,9 +9,17 @@ import { Request, Response, RequestHandler } from "express";
 import { Comment } from "../../../models";
 
 /**
+ * Imports middlewares
+ */
+import { requireAdminAuth } from "../../../middlewares";
+
+/**
  * Imports services
  */
-import { PaginationService } from "../../../services/pagination";
+import {
+  PaginationService,
+  PaginationConfig,
+} from "../../../services/pagination";
 
 /**
  * Handles getting the comments
@@ -22,7 +30,7 @@ const getComments = async (req: Request, res: Response) => {
   /**
    * Defines the pagination config
    */
-  const config = {
+  const config: PaginationConfig = {
     pagination: { page, limit, orderBy, orderDir },
     populate: { path: "user" },
   };
@@ -38,6 +46,6 @@ const getComments = async (req: Request, res: Response) => {
 /**
  * Defines the controller
  */
-const getCommentsController: RequestHandler[] = [getComments];
+const getCommentsController: RequestHandler[] = [requireAdminAuth, getComments];
 
 export { getCommentsController };

@@ -8,6 +8,21 @@ import { Admin, Article, User, Comment } from "../../../models";
 import { server } from "../../../server";
 
 /**
+ * Handles getting an admin token
+ */
+const getAdminToken = async () => {
+  const resp = await request(server)
+    .post("/v1/auth/register-admin")
+    .send({
+      username: "admin-root2",
+      password: "Da2xVHtnPjB1l6!",
+    })
+    .expect(201);
+
+  return { token: resp.body.token };
+};
+
+/**
  * Handles generating a list of comments
  */
 const generateComments = async (count: number) => {
@@ -66,7 +81,18 @@ it("has a router handler listening for requests", async () => {
   expect(res.status).not.toEqual(404);
 });
 
+it("returns 400 if no Authorization header is provided", async () => {
+  const res = await request(server).get("/v1/comments").send({}).expect(400);
+
+  const { errors } = res.body;
+
+  expect(errors.length).toBe(1);
+  expect(errors[0].errorType).toBe("AuthorizationRequired");
+});
+
 it("returns 200 and a list of comments", async () => {
+  const { token } = await getAdminToken();
+
   /**
    * Defines the default pagination options
    */
@@ -78,7 +104,11 @@ it("returns 200 and a list of comments", async () => {
 
   await generateComments(commentsCount);
 
-  const res = await request(server).get("/v1/comments").send({}).expect(200);
+  const res = await request(server)
+    .get("/v1/comments")
+    .set("Authorization", token)
+    .send({})
+    .expect(200);
   const totalPages = calculateTotalPages(commentsCount, DEFAULT_LIMIT);
 
   const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
@@ -93,6 +123,8 @@ it("returns 200 and a list of comments", async () => {
 });
 
 it("returns 200 and correctly paginates", async () => {
+  const { token } = await getAdminToken();
+
   const commentsCount = 15;
   const request_limit = 2;
   const request_page = 2;
@@ -104,6 +136,7 @@ it("returns 200 and correctly paginates", async () => {
     .get(
       `/v1/comments?limit=${request_limit}&page=${request_page}&orderBy=${request_orderBy}&orderDir=${request_orderDir}`
     )
+    .set("Authorization", token)
     .send({})
     .expect(200);
 
@@ -120,6 +153,8 @@ it("returns 200 and correctly paginates", async () => {
 });
 
 it("returns 200 and an empty array if over-paginated", async () => {
+  const { token } = await getAdminToken();
+
   const commentsCount = 15;
   const request_limit = 100;
   const request_page = 2;
@@ -131,6 +166,7 @@ it("returns 200 and an empty array if over-paginated", async () => {
     .get(
       `/v1/comments?limit=${request_limit}&page=${request_page}&orderBy=${request_orderBy}&orderDir=${request_orderDir}`
     )
+    .set("Authorization", token)
     .send({})
     .expect(200);
 

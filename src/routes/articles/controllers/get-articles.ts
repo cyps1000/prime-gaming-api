@@ -11,7 +11,10 @@ import { Article } from "../../../models";
 /**
  * Imports services
  */
-import { PaginationService } from "../../../services/pagination";
+import {
+  PaginationService,
+  PaginationConfig,
+} from "../../../services/pagination";
 
 /**
  * Handles getting the articles
@@ -22,7 +25,7 @@ const getArticles = async (req: Request, res: Response) => {
   /**
    * Defines the pagination config
    */
-  const config = {
+  const config: PaginationConfig = {
     pagination: { page, limit, orderBy, orderDir },
     populate: {
       path: "comments author",

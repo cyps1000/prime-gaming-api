@@ -7,7 +7,7 @@
     "prepare": "husky install",
     "start": "ts-node-dev --poll src/index.ts",
     "test-dev": "jest --watchAll --no-cache",
-    "test-coverage": "jest --collectCoverage --no-cache",
+    "test-coverage": "jest --collectCoverage --no-cache --detectOpenHandles",
     "test": "jest --no-cache --detectOpenHandles",
     "generate-apidoc": "apidoc -i src/routes/ -o src/docs && npm run open",
     "open": "start http://localhost:3001/docs"
