@@ -10,6 +10,7 @@ export interface UserAttributes {
   firstName: string;
   lastName: string;
   password: string;
+  suspended?: boolean;
 }
 
 /**
@@ -23,6 +24,7 @@ export interface UserDocument extends mongoose.Document {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  suspended: boolean;
 }
 
 /**
@@ -54,6 +56,10 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+    suspended: {
+      type: Boolean,
+      default: false,
     },
   },
   {
