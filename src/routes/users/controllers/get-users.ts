@@ -18,7 +18,7 @@ import { requireAdminAuth } from "../../../middlewares";
  */
 import {
   PaginationService,
-  PaginationConfig,
+  PaginationConfig
 } from "../../../services/pagination";
 
 /**
@@ -31,7 +31,7 @@ const getUsers = async (req: Request, res: Response) => {
    * Defines the pagination config
    */
   const config: PaginationConfig = {
-    pagination: { page, limit, orderBy, orderDir },
+    pagination: { page, limit, orderBy, orderDir }
   };
 
   const data = await PaginationService.paginate(User, config);

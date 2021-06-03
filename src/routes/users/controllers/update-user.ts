@@ -15,7 +15,7 @@ import { body } from "express-validator";
 import {
   currentUser,
   requireAuth,
-  validateRequest,
+  validateRequest
 } from "../../../middlewares";
 
 /**
@@ -28,6 +28,16 @@ import { RequestError, ErrorTypes } from "../../../services/error";
  */
 const requestValidation = [
   body("email").optional().isEmail().withMessage("Email must be valid"),
+  body("firstName")
+    .optional()
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("Please provide your first name"),
+  body("lastName")
+    .optional()
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("Please provide your last name")
 ];
 
 /**
@@ -70,7 +80,7 @@ const updateUserController: RequestHandler[] = [
   validateRequest,
   requireAuth,
   currentUser,
-  updateUser,
+  updateUser
 ];
 
 export { updateUserController };
