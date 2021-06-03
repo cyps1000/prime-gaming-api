@@ -107,6 +107,7 @@ it("returns 200 if a user is trying to update his own account", async () => {
   const { user: userData, token } = await getUserToken();
 
   const requestBody = {
+    email: faker.internet.email(),
     firstName: faker.name.firstName(),
     lastName: faker.name.lastName()
   };
@@ -120,7 +121,25 @@ it("returns 200 if a user is trying to update his own account", async () => {
   const { success, user } = res.body;
 
   expect(success).toBe(true);
-  expect(user.suspended).toBe(false);
+  expect(user.email).toBe(requestBody.email);
+  expect(user.firstName).toBe(requestBody.firstName);
+  expect(user.lastName).toBe(requestBody.lastName);
+});
+
+it("returns 200 if a user is trying to update his own account but changes nothing", async () => {
+  const { user: userData, token } = await getUserToken();
+  const res = await request(server)
+    .put(`/v1/users/${userData.id}`)
+    .set("Authorization", token)
+    .send({})
+    .expect(200);
+
+  const { success, user } = res.body;
+
+  expect(success).toBe(true);
+  expect(user.email).toBe(userData.email);
+  expect(user.firstName).toBe(userData.firstName);
+  expect(user.lastName).toBe(userData.lastName);
 });
 
 it("returns 400 if the provided inputs are not valid", async () => {
