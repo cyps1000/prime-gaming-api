@@ -14,7 +14,7 @@ import { User, Admin } from "../../../models";
 import {
   currentUser,
   requireAuth,
-  validateRequest,
+  validateRequest
 } from "../../../middlewares";
 
 /**
@@ -35,7 +35,7 @@ const deleteUser = async (req: Request, res: Response) => {
   const user = await User.findById(id);
   const isAdmin = await Admin.findById(currentUser);
 
-  if (!user) throw new RequestError(ErrorTypes.ResourceNotFound);
+  if (!user) throw new RequestError(ErrorTypes.AccountNotFound);
 
   /**
    * Only allow the user itself to change the account or an admin
@@ -66,7 +66,7 @@ const deleteUserController: RequestHandler[] = [
   requireAuth,
   currentUser,
   validateRequest,
-  deleteUser,
+  deleteUser
 ];
 
 export { deleteUserController };

@@ -67,7 +67,7 @@ it("returns 404 if the account wasn't found", async () => {
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
+  expect(errors[0].errorType).toBe("AccountNotFound");
 });
 
 it("returns 401 if a user is trying to update another user's account", async () => {
@@ -140,6 +140,26 @@ it("returns 200 if a user is trying to update his own account but changes nothin
   expect(user.email).toBe(userData.email);
   expect(user.firstName).toBe(userData.firstName);
   expect(user.lastName).toBe(userData.lastName);
+});
+
+it("returns 400 if the email is already in use", async () => {
+  const { user, token } = await getUserToken();
+  const { user: existingUser } = await getUserToken();
+
+  const requestBody = {
+    email: existingUser.email
+  };
+
+  const res = await request(server)
+    .put(`/v1/users/${user.id}`)
+    .set("Authorization", token)
+    .send(requestBody)
+    .expect(400);
+
+  const { errors } = res.body;
+
+  expect(errors.length).toBe(1);
+  expect(errors[0].errorType).toBe("EmailInUse");
 });
 
 it("returns 400 if the provided inputs are not valid", async () => {

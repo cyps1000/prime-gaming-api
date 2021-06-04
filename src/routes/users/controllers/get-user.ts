@@ -30,7 +30,7 @@ const getUser = async (req: Request, res: Response) => {
    */
   const user = await User.findById(id);
 
-  if (!user) throw new RequestError(ErrorTypes.ResourceNotFound);
+  if (!user) throw new RequestError(ErrorTypes.AccountNotFound);
 
   res.send(user);
 };
@@ -41,7 +41,7 @@ const getUser = async (req: Request, res: Response) => {
 const getUserController: RequestHandler[] = [
   requireAdminAuth,
   validateRequest,
-  getUser,
+  getUser
 ];
 
 export { getUserController };

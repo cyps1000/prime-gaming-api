@@ -13,7 +13,7 @@ const getAdminToken = async () => {
     .post("/v1/auth/register-admin")
     .send({
       username: "admin-root",
-      password: "Da2xVHtnPjB1l6!",
+      password: "Da2xVHtnPjB1l6!"
     })
     .expect(201);
 
@@ -49,7 +49,7 @@ it("returns 404 if trying to delete a user that doesn't exist", async () => {
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
+  expect(errors[0].errorType).toBe("AccountNotFound");
 });
 
 it("returns 400 if the provided param id is invalid", async () => {
@@ -76,7 +76,7 @@ it("returns 200 when an admin deletes a user", async () => {
       firstName: "John",
       lastName: "Doe",
       email: "john@doe.com",
-      password: "test1234",
+      password: "test1234"
     })
     .expect(201);
 
@@ -101,7 +101,7 @@ it("returns 401 when a user tries to delete an account that he doesn't own", asy
       firstName: "John",
       lastName: "Doe",
       email: "john@doe.com",
-      password: "test1234",
+      password: "test1234"
     })
     .expect(201);
 
@@ -111,7 +111,7 @@ it("returns 401 when a user tries to delete an account that he doesn't own", asy
       firstName: "John",
       lastName: "Doe",
       email: "john2@doe.com",
-      password: "test1234",
+      password: "test1234"
     })
     .expect(201);
 
@@ -137,7 +137,7 @@ it("returns 400 when a user tries to delete his account, but it's not suspended"
       firstName: "John",
       lastName: "Doe",
       email: "john@doe.com",
-      password: "test1234",
+      password: "test1234"
     })
     .expect(201);
 

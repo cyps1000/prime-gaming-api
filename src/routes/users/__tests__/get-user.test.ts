@@ -37,7 +37,7 @@ it("returns 404 if trying to get a user that doesn't exist", async () => {
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
+  expect(errors[0].errorType).toBe("AccountNotFound");
 });
 
 it("returns 400 if the provided param id is invalid", async () => {

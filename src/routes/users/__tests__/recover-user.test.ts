@@ -69,7 +69,7 @@ it("returns 404 if the account wasn't found", async () => {
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
+  expect(errors[0].errorType).toBe("AccountNotFound");
 });
 
 it("returns 401 if a user is trying to recover another user's account", async () => {

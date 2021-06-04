@@ -54,7 +54,7 @@ const updateUser = async (req: Request, res: Response) => {
   const user = await User.findById(id);
   const isAdmin = await Admin.findById(currentUser);
 
-  if (!user) throw new RequestError(ErrorTypes.ResourceNotFound);
+  if (!user) throw new RequestError(ErrorTypes.AccountNotFound);
 
   /**
    * Only allow the user itself to change the account or an admin
@@ -63,7 +63,15 @@ const updateUser = async (req: Request, res: Response) => {
     throw new RequestError(ErrorTypes.NotAuthorized);
   }
 
-  if (email) user.email = email;
+  /**
+   * Checks if the email is already taken
+   */
+  if (email && email !== user.email) {
+    const emailExists = await User.findOne({ email });
+    if (emailExists) throw new RequestError(ErrorTypes.EmailInUse);
+
+    user.email = email;
+  }
   if (firstName) user.firstName = firstName;
   if (lastName) user.lastName = lastName;
 
