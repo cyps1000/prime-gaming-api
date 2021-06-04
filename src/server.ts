@@ -29,6 +29,7 @@ import { CorsService } from "./services/cors";
 import { authRouter } from "./routes/auth";
 import { articlesRouter } from "./routes/articles";
 import { commentsRouter } from "./routes/comments";
+import { usersRouter } from "./routes/users";
 
 /**
  * Enables access to .env
@@ -56,7 +57,7 @@ server.use(CorsService.setup());
  */
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
-// server.use(helmet());
+server.use(helmet());
 
 /**
  * Blacklist
@@ -77,6 +78,11 @@ server.use(apiVersion, articlesRouter);
  * Comments Router
  */
 server.use(apiVersion, commentsRouter);
+
+/**
+ * Users Router
+ */
+server.use(apiVersion, usersRouter);
 
 /**
  * Sets up the api docs route (only in development)
