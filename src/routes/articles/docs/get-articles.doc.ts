@@ -65,7 +65,6 @@
  * @apiSuccess {Number} limit Articles per page
  * @apiSuccess {String} orderBy Order articles by field
  * @apiSuccess {String} orderDir Order articles in desc or asc order
- * @apiError (Error 400) InvalidObjectID <code>Please provide a valid object id.</code>
  * @apiError (Error 400) AuthorizationRequired  <code>The authorization header is required.</code>
  * @apiError (Error 401) NotAuthorized  <code>You are not authorized.</code>
  * @apiError (Error 401) RefreshTokenExpired <code>Refresh token has expired.</code>
