@@ -11,7 +11,7 @@ import { server } from "../server";
 /**
  * Imports models
  */
-import { Admin, User } from "../models";
+import { Admin, User, Article } from "../models";
 
 /**
  * Imports services
@@ -49,7 +49,7 @@ export interface TestConfig {
  * Defines the auth service
  */
 export class TestingService {
-  static async execute(testConfig: TestConfig) {
+  static async use(testConfig: TestConfig) {
     const { url, method, middlewares, body, fields } = testConfig;
 
     if (!method) throw new Error("No method provided");
@@ -60,7 +60,11 @@ export class TestingService {
         [method](url)
         .send(body || {});
 
-      expect(response.status).not.toEqual(404);
+      const { errors } = response.body;
+
+      if (errors) {
+        expect(errors[0].errorType).not.toBe(ErrorTypes.RouteNotFound);
+      }
     });
 
     if (
@@ -260,5 +264,21 @@ export class TestingService {
     return jwt.sign(payload, secretKey, {
       expiresIn: config?.expired ? 1 : 60
     });
+  }
+
+  static async generateArticles(count: number) {
+    const { user } = await this.createAdminAccount();
+
+    const data: any[] = [];
+
+    for (let i = 0; i < count; i++) {
+      data.push({
+        title: faker.lorem.sentence(5, 10),
+        content: faker.lorem.paragraph(20),
+        author: user.id
+      });
+    }
+
+    Article.insertMany(data);
   }
 }

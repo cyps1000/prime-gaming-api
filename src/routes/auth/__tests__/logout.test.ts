@@ -19,7 +19,7 @@ const config: TestConfig = {
   middlewares: ["requireAuth"]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("successfully logs out", async () => {
   const { token: userToken } = await TestingService.createUserAccount();

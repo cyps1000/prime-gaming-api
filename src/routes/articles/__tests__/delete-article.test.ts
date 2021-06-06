@@ -20,7 +20,7 @@ const config: TestConfig = {
   middlewares: ["requireAdminAuth"]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("returns 404 if trying to delete an article that doesn't exist", async () => {
   const { token } = await TestingService.createAdminAccount();

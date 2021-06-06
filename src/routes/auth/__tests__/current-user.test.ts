@@ -19,7 +19,7 @@ const config: TestConfig = {
   middlewares: ["requireAuth"]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("returns 200 and the user's data", async () => {
   const { token, user } = await TestingService.createUserAccount();

@@ -32,7 +32,7 @@ const config: TestConfig = {
   ]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("returns 201 and the created article", async () => {
   const { token } = await TestingService.createAdminAccount();

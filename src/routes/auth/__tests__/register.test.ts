@@ -10,6 +10,7 @@ import { server } from "../../../server";
  * Imports services
  */
 import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
 /**
  * Defines the test config
@@ -42,7 +43,7 @@ const config: TestConfig = {
   ]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("returns 400 if the email is taken", async () => {
   const { requestBody } = await TestingService.createUserAccount();
@@ -55,17 +56,17 @@ it("returns 400 if the email is taken", async () => {
   const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("EmailInUse");
+  expect(errors[0].errorType).toBe(ErrorTypes.EmailInUse);
 });
 
 it("creates a user if all the request is valid", async () => {
   await request(server)
     .post("/v1/auth/register")
     .send({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@doe.com",
-      password: "test1234"
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+      email: faker.internet.email(),
+      password: faker.internet.password()
     })
     .expect(201);
 });

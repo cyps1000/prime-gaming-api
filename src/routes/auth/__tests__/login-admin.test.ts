@@ -33,7 +33,7 @@ const config: TestConfig = {
   ]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("returns 400 if the username is wrong", async () => {
   const { requestBody } = await TestingService.createAdminAccount();

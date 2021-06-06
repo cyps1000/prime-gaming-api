@@ -33,7 +33,7 @@ const config: TestConfig = {
   ]
 };
 
-TestingService.execute(config);
+TestingService.use(config);
 
 it("returns 400 if an account exists", async () => {
   const { requestBody } = await TestingService.createAdminAccount();
