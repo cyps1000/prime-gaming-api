@@ -1,4 +1,5 @@
 import request from "supertest";
+import faker from "faker";
 
 /**
  * Imports the server
@@ -6,66 +7,51 @@ import request from "supertest";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root",
-      password: "Da2xVHtnPjB1l6!",
-    })
-    .expect(201);
+import { TestingService, TestConfig } from "../../../services/testing";
 
-  return { token: resp.body.token };
+/**
+ * Defines the test config
+ */
+const config: TestConfig = {
+  url: "/v1/articles",
+  method: "post",
+  middlewares: ["requireAdminAuth", "validateRequest"],
+  fields: [
+    {
+      name: "title",
+      getValue: () => faker.lorem.sentence(3),
+      validate: true
+    },
+    {
+      name: "content",
+      getValue: () => faker.lorem.paragraph(3),
+      validate: false
+    }
+  ]
 };
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).post("/v1/articles").send({});
-  expect(res.status).not.toEqual(404);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server).post("/v1/articles").send({}).expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
-
-it("returns 400 if the provided inputs are not valid", async () => {
-  const { token } = await getAdminToken();
-
-  const res = await request(server)
-    .post("/v1/articles")
-    .set("Authorization", token)
-    .send({})
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-
-  expect(errors[0].field).toBe("title");
-  expect(errors[0].errorType).toBe("InputValidation");
-});
+TestingService.execute(config);
 
 it("returns 201 and the created article", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
+  /**
+   * Defines the request body
+   */
   const requestBody = {
-    title: "Test Article",
-    content: "Test content",
+    title: faker.lorem.sentence(3),
+    content: faker.lorem.paragraph(3)
   };
 
-  const res = await request(server)
+  const response = await request(server)
     .post("/v1/articles")
     .set("Authorization", token)
     .send(requestBody)
     .expect(201);
 
-  const { title, content } = res.body;
+  const { title, content } = response.body;
 
   expect(title).toBe(requestBody.title);
   expect(content).toBe(requestBody.content);

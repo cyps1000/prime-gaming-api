@@ -13,6 +13,11 @@ dotenv.config();
 let mongo: any;
 
 /**
+ * Sets the timeout to 30 seconds
+ */
+jest.setTimeout(30000);
+
+/**
  * Sets up mongodb before all tests
  */
 beforeAll(async () => {
@@ -23,7 +28,7 @@ beforeAll(async () => {
   await mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useCreateIndex: true,
+    useCreateIndex: true
   });
 });
 

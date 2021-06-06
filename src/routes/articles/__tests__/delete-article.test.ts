@@ -6,96 +6,66 @@ import request from "supertest";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root",
-      password: "Da2xVHtnPjB1l6!",
-    })
-    .expect(201);
+import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
-  return { token: resp.body.token };
+/**
+ * Defines the test config
+ */
+const config: TestConfig = {
+  url: "/v1/articles/60b4fa10ded55343745e29d7",
+  method: "delete",
+  middlewares: ["requireAdminAuth"]
 };
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server)
-    .delete("/v1/articles/4325903459034")
-    .send({});
-  expect(res.status).not.toEqual(404);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server)
-    .delete("/v1/articles/4325903459034")
-    .send()
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
+TestingService.execute(config);
 
 it("returns 404 if trying to delete an article that doesn't exist", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .delete("/v1/articles/60b4fa10ded55343745e29d7")
     .set("Authorization", token)
     .send()
     .expect(404);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
+  expect(errors[0].errorType).toBe(ErrorTypes.ResourceNotFound);
 });
 
 it("returns 400 if the provided param id is invalid", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .delete("/v1/articles/this_is_an_invalid_id")
     .set("Authorization", token)
     .send()
     .expect(400);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("InvalidObjectID");
+  expect(errors[0].errorType).toBe(ErrorTypes.InvalidObjectID);
 });
 
 it("returns 200 when the request is successful", async () => {
-  const { token } = await getAdminToken();
+  const { token, article, requestBody } = await TestingService.createArticle();
 
-  const requestBody = {
-    title: "Test Article",
-    content: "Test content",
-  };
+  expect(article.title).toBe(requestBody.title);
+  expect(article.content).toBe(requestBody.content);
 
-  const created = await request(server)
-    .post("/v1/articles")
-    .set("Authorization", token)
-    .send(requestBody)
-    .expect(201);
-
-  const { title, content, id } = created.body;
-
-  expect(title).toBe(requestBody.title);
-  expect(content).toBe(requestBody.content);
-
-  const res = await request(server)
-    .delete(`/v1/articles/${id}`)
+  const response = await request(server)
+    .delete(`/v1/articles/${article.id}`)
     .set("Authorization", token)
     .send()
     .expect(200);
 
-  const { success, article } = res.body;
+  const { success, article: deletedArticle } = response.body;
 
   expect(success).toBe(true);
-  expect(article.id).toBe(id);
+  expect(deletedArticle.id).toBe(article.id);
 });
