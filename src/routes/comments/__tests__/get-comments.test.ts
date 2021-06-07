@@ -1,6 +1,4 @@
 import request from "supertest";
-import faker from "faker";
-import { Admin, Article, User, Comment } from "../../../models";
 
 /**
  * Imports the server
@@ -8,114 +6,51 @@ import { Admin, Article, User, Comment } from "../../../models";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root2",
-      password: "Da2xVHtnPjB1l6!",
-    })
-    .expect(201);
-
-  return { token: resp.body.token };
-};
+import { TestingService, TestConfig } from "../../../services/testing";
+import {
+  calculateTotalPages,
+  PaginationService
+} from "../../../services/pagination";
 
 /**
- * Handles generating a list of comments
+ * Defines the test config
  */
-const generateComments = async (count: number) => {
-  const admin = Admin.build({
-    username: "admin-root",
-    password: "Da2xVHtnPjB1l6!",
-    role: "prime-admin",
-  });
-
-  await admin.save();
-
-  const user = User.build({
-    firstName: faker.name.firstName(),
-    lastName: faker.name.lastName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-  });
-
-  await user.save();
-
-  const article = Article.build({
-    title: "Test Article",
-    content: "Some random content",
-    author: admin.id,
-  });
-
-  await article.save();
-
-  const data: any[] = [];
-
-  for (let i = 0; i < count; i++) {
-    data.push({
-      content: faker.lorem.paragraph(1),
-      user: user.id,
-      articleId: article.id,
-    });
-  }
-
-  Comment.insertMany(data);
+const config: TestConfig = {
+  url: "/v1/comments",
+  method: "get",
+  middlewares: ["requireAdminAuth"]
 };
 
-/**
- * Handles calculating the total number of pages
- */
-const calculateTotalPages = (count: number, limit: number) => {
-  /**
-   * Defines the total pages
-   */
-  const totalPages = Math.floor((count + limit - 1) / limit);
-
-  return count < limit ? 1 : totalPages;
-};
-
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).get("/v1/comments").send({});
-  expect(res.status).not.toEqual(404);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server).get("/v1/comments").send({}).expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
+TestingService.use(config);
 
 it("returns 200 and a list of comments", async () => {
-  const { token } = await getAdminToken();
+  const { token, user } = await TestingService.createAdminAccount();
 
   /**
    * Defines the default pagination options
    */
-  const commentsCount = 10;
-  const DEFAULT_CURRENT_PAGE = 1;
-  const DEFAULT_LIMIT = 15;
-  const DEFAULT_ORDER_BY = "createdAt";
-  const DEFAULT_ORDER_DIR = "desc";
+  const {
+    DEFAULT_CURRENT_PAGE,
+    DEFAULT_LIMIT,
+    DEFAULT_ORDER_BY,
+    DEFAULT_ORDER_DIR
+  } = PaginationService.getDefaultOptions();
 
-  await generateComments(commentsCount);
+  await TestingService.generateComments(25, user);
 
-  const res = await request(server)
+  const response = await request(server)
     .get("/v1/comments")
     .set("Authorization", token)
     .send({})
     .expect(200);
-  const totalPages = calculateTotalPages(commentsCount, DEFAULT_LIMIT);
 
-  const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
+  const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
 
-  expect(items.length).toBe(commentsCount);
-  expect(count).toBe(commentsCount);
-  expect(pages).toBe(totalPages);
+  expect(items.length).toBe(limit);
+  expect(count).toBe(25);
+  expect(pages).toBe(calculateTotalPages(25, DEFAULT_LIMIT));
   expect(page).toBe(DEFAULT_CURRENT_PAGE);
   expect(limit).toBe(DEFAULT_LIMIT);
   expect(orderBy).toBe(DEFAULT_ORDER_BY);
@@ -123,61 +58,45 @@ it("returns 200 and a list of comments", async () => {
 });
 
 it("returns 200 and correctly paginates", async () => {
-  const { token } = await getAdminToken();
+  const { token, user } = await TestingService.createAdminAccount();
+  await TestingService.generateComments(15, user);
 
-  const commentsCount = 15;
-  const request_limit = 2;
-  const request_page = 2;
-  const request_orderBy = "title";
-  const request_orderDir = "asc";
-
-  await generateComments(commentsCount);
-  const res = await request(server)
-    .get(
-      `/v1/comments?limit=${request_limit}&page=${request_page}&orderBy=${request_orderBy}&orderDir=${request_orderDir}`
-    )
+  const response = await request(server)
+    .get(`/v1/comments?limit=2&page=2&orderBy=title&orderDir=asc`)
     .set("Authorization", token)
     .send({})
     .expect(200);
 
-  const totalPages = calculateTotalPages(commentsCount, request_limit);
-  const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
+  const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
+  const totalPages = calculateTotalPages(15, 2);
 
   expect(items.length).toBe(limit);
-  expect(count).toBe(commentsCount);
+  expect(count).toBe(15);
   expect(pages).toBe(totalPages);
-  expect(page).toBe(request_page);
-  expect(limit).toBe(request_limit);
-  expect(orderBy).toBe(request_orderBy);
-  expect(orderDir).toBe(request_orderDir);
+  expect(page).toBe(2);
+  expect(limit).toBe(2);
+  expect(orderBy).toBe("title");
+  expect(orderDir).toBe("asc");
 });
 
 it("returns 200 and an empty array if over-paginated", async () => {
-  const { token } = await getAdminToken();
+  const { token, user } = await TestingService.createAdminAccount();
+  await TestingService.generateComments(15, user);
 
-  const commentsCount = 15;
-  const request_limit = 100;
-  const request_page = 2;
-  const request_orderBy = "title";
-  const request_orderDir = "asc";
-
-  await generateComments(commentsCount);
-  const res = await request(server)
-    .get(
-      `/v1/comments?limit=${request_limit}&page=${request_page}&orderBy=${request_orderBy}&orderDir=${request_orderDir}`
-    )
+  const response = await request(server)
+    .get(`/v1/comments?limit=100&page=2&orderBy=title&orderDir=asc`)
     .set("Authorization", token)
     .send({})
     .expect(200);
 
-  const totalPages = calculateTotalPages(commentsCount, request_limit);
-  const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
+  const totalPages = calculateTotalPages(15, 100);
+  const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
 
   expect(items.length).toBe(0);
-  expect(count).toBe(commentsCount);
+  expect(count).toBe(15);
   expect(pages).toBe(totalPages);
-  expect(page).toBe(request_page);
-  expect(limit).toBe(request_limit);
-  expect(orderBy).toBe(request_orderBy);
-  expect(orderDir).toBe(request_orderDir);
+  expect(page).toBe(2);
+  expect(limit).toBe(100);
+  expect(orderBy).toBe("title");
+  expect(orderDir).toBe("asc");
 });

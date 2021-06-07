@@ -23,11 +23,8 @@ const config: TestConfig = {
 TestingService.use(config);
 
 it("returns 404 if trying to get an article that doesn't exist", async () => {
-  const { token } = await TestingService.createUserAccount();
-
   const response = await request(server)
     .get("/v1/articles/60b4fa10ded55343745e29d7")
-    .set("Authorization", token)
     .send()
     .expect(404);
 
@@ -38,11 +35,8 @@ it("returns 404 if trying to get an article that doesn't exist", async () => {
 });
 
 it("returns 400 if the provided param id is invalid", async () => {
-  const { token } = await TestingService.createUserAccount();
-
   const response = await request(server)
     .get("/v1/articles/this_is_an_invalid_id")
-    .set("Authorization", token)
     .send()
     .expect(400);
 
@@ -53,14 +47,13 @@ it("returns 400 if the provided param id is invalid", async () => {
 });
 
 it("returns 200 and the article on a successful request", async () => {
-  const { token, article, requestBody } = await TestingService.createArticle();
+  const { article, requestBody } = await TestingService.createArticle();
 
   expect(article.title).toBe(requestBody.title);
   expect(article.content).toBe(requestBody.content);
 
   const response = await request(server)
     .get(`/v1/articles/${article.id}`)
-    .set("Authorization", token)
     .send(requestBody)
     .expect(200);
 

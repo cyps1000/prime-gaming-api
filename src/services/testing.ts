@@ -11,7 +11,7 @@ import { server } from "../server";
 /**
  * Imports models
  */
-import { Admin, User, Article } from "../models";
+import { Admin, User, Article, Comment } from "../models";
 
 /**
  * Imports services
@@ -67,6 +67,8 @@ export class TestingService {
       }
     });
 
+    if (middlewares.length < 1) return;
+
     if (
       middlewares.includes("requireAuth") ||
       middlewares.includes("requireAdminAuth")
@@ -74,10 +76,13 @@ export class TestingService {
       it(`TestingService:${method.toUpperCase()} - ${url} - returns 400 if no Authorization header is provided`, async () => {
         const response = await request(server)
           [method](url)
-          .send(body || {})
-          .expect(400);
+          .send(body || {});
 
         const { errors } = response.body;
+
+        if (response.status !== 400) {
+          console.log(errors);
+        }
 
         expect(errors.length).toBe(1);
         expect(errors[0].errorType).toBe(ErrorTypes.AuthorizationRequired);
@@ -220,10 +225,19 @@ export class TestingService {
       password: "Hj7sSfes2AS556vFr!"
     };
 
+    const adminExists = await Admin.find({});
+
+    if (adminExists) {
+      await Admin.deleteMany({});
+    }
+
     const response = await request(server)
       .post("/v1/auth/register-admin")
-      .send(requestBody)
-      .expect(201);
+      .send(requestBody);
+
+    if (response.body.errors) {
+      console.log("resp:", response.body);
+    }
 
     const { token, user } = response.body;
 
@@ -280,5 +294,55 @@ export class TestingService {
     }
 
     Article.insertMany(data);
+  }
+
+  static async generateComments(count: number, user: any) {
+    const article = Article.build({
+      title: faker.lorem.sentence(5, 10),
+      content: faker.lorem.paragraph(20),
+      author: user.id
+    });
+
+    await article.save();
+
+    const data: any[] = [];
+
+    for (let i = 0; i < count; i++) {
+      data.push({
+        content: faker.lorem.paragraph(1),
+        user: user.id,
+        articleId: article.id
+      });
+    }
+
+    Comment.insertMany(data);
+  }
+
+  static async createComment(config?: { banned: boolean }) {
+    const { article, token: adminToken } = await this.createArticle();
+    const { token } = await this.createUserAccount();
+
+    const requestBody = {
+      content: faker.lorem.paragraph(3),
+      articleId: article.id
+    };
+
+    const response = await request(server)
+      .post("/v1/comments")
+      .set("Authorization", token)
+      .send(requestBody)
+      .expect(201);
+
+    const comment = response.body;
+
+    if (config && config.banned) {
+      await request(server)
+        .put(`/v1/comments/${comment.id}/ban`)
+        .set("Authorization", adminToken)
+        .send()
+        .expect(200);
+    }
+
+    return { comment, article, response, token, adminToken, requestBody };
   }
 }

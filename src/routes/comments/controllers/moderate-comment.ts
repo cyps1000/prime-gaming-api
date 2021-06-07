@@ -15,7 +15,7 @@ import { body } from "express-validator";
 import {
   validateRequest,
   currentUser,
-  requireAdminAuth,
+  requireAdminAuth
 } from "../../../middlewares";
 
 /**
@@ -27,7 +27,7 @@ import { RequestError, ErrorTypes } from "../../../services/error";
  * Defines the request validation middleware
  */
 const requestValidation = [
-  body("content").not().isEmpty().withMessage("Please provide the content"),
+  body("content").not().isEmpty().withMessage("Please provide the content")
 ];
 
 /**
@@ -50,7 +50,7 @@ const moderateComment = async (req: Request, res: Response) => {
 
   await comment.save();
 
-  res.send(comment);
+  res.send({ success: true, comment });
 };
 
 /**
@@ -61,7 +61,7 @@ const moderateCommentController: RequestHandler[] = [
   currentUser,
   ...requestValidation,
   validateRequest,
-  moderateComment,
+  moderateComment
 ];
 
 export { moderateCommentController };

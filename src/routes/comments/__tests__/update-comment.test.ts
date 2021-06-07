@@ -14,7 +14,7 @@ const getAdminToken = async () => {
     .post("/v1/auth/register-admin")
     .send({
       username: "admin-root",
-      password: "Da2xVHtnPjB1l6!",
+      password: "Da2xVHtnPjB1l6!"
     })
     .expect(201);
 
@@ -31,7 +31,7 @@ const getUserToken = async () => {
       firstName: faker.name.findName(),
       lastName: faker.name.lastName(),
       email: faker.internet.email(),
-      password: faker.internet.password(),
+      password: faker.internet.password()
     })
     .expect(201);
 
@@ -46,7 +46,7 @@ const createArticle = async () => {
 
   const requestBody = {
     title: "Test Article",
-    content: "Test content",
+    content: "Test content"
   };
 
   const res = await request(server)
@@ -79,7 +79,7 @@ it("returns 404 if trying to ban a comment that doesn't exist", async () => {
   const { token } = await getAdminToken();
 
   const requestBodyModerated = {
-    content: "Test content - moderated",
+    content: "Test content - moderated"
   };
 
   const res = await request(server)
@@ -99,7 +99,7 @@ it("returns 400 if the provided param id is invalid", async () => {
 
   const requestBody = {
     content: "Test content",
-    articleId: article.id,
+    articleId: article.id
   };
 
   const res = await request(server)
@@ -121,11 +121,11 @@ it("returns 404 if a user is trying to update a comment that doesn't belong to h
 
   const requestBody = {
     content: "Test content",
-    articleId: article.id,
+    articleId: article.id
   };
 
   const requestBodyChanged = {
-    content: "Test content - changed",
+    content: "Test content - changed"
   };
 
   const created = await request(server)
@@ -154,11 +154,11 @@ it("returns 400 if an admin is trying to update a comment that doesn't belong to
 
   const requestBody = {
     content: "Test content",
-    articleId: article.id,
+    articleId: article.id
   };
 
   const requestBodyChanged = {
-    content: "Test content - changed",
+    content: "Test content - changed"
   };
 
   const created = await request(server)
@@ -186,11 +186,11 @@ it("returns 200 when the request is successful", async () => {
 
   const requestBody = {
     content: "Test content",
-    articleId: article.id,
+    articleId: article.id
   };
 
   const requestBodyChanged = {
-    content: "Test content - changed",
+    content: "Test content - changed"
   };
 
   const created = await request(server)
@@ -207,7 +207,9 @@ it("returns 200 when the request is successful", async () => {
     .send(requestBodyChanged)
     .expect(200);
 
-  const { id: commentID, content } = res.body;
-  expect(commentID).toBe(id);
-  expect(content).toBe(requestBodyChanged.content);
+  const { success, comment: responseComment } = res.body;
+
+  expect(success).toBe(true);
+  expect(responseComment.id).toBe(id);
+  expect(responseComment.content).toBe(requestBodyChanged.content);
 });
