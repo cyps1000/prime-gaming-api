@@ -4,55 +4,28 @@ import request from "supertest";
  * Imports the server
  */
 import { server } from "../../../server";
+import { ErrorTypes } from "../../../services/error";
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).get("/v1/auth/refresh-token").send();
-  expect(res.status).not.toEqual(404);
-});
+/**
+ * Imports services
+ */
+import { TestingService, TestConfig } from "../../../services/testing";
 
-it("returns 200 and a new access token", async () => {
-  const res = await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@doe.com",
-      password: "test1234",
-    })
-    .expect(201);
+/**
+ * Defines the test config
+ */
+const config: TestConfig = {
+  url: "/v1/auth/refresh-token",
+  method: "get",
+  middlewares: []
+};
 
-  const { token } = res.body;
-
-  const refreshRes = await request(server)
-    .get("/v1/auth/refresh-token")
-    .set("Authorization", token)
-    .send()
-    .expect(200);
-
-  const { accessToken } = refreshRes.body;
-
-  expect(accessToken).toBeDefined();
-  expect(accessToken.length).toBeGreaterThan(100);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server)
-    .get("/v1/auth/refresh-token")
-    .send()
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
+TestingService.use(config);
 
 it("returns 401 if a refresh token is expired / not found", async () => {
-  /**
-   * Defines the expired token
-   */
-  const expiredToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYjM5NTVmYjhhNTYwNTk4YzA5N2I0ZCIsInRrSWQiOiI2MGIzOTU1ZmI4YTU2MDU5OGMwOTdiNTAiLCJyZWZyZXNoVG9rZW4iOiI2MGIzOTU1ZmI4YTU2MDU5OGMwOTdiNGYiLCJpYXQiOjE2MjIzODE5MTksImV4cCI6MTYyMjM4MzcxOX0.BJXohAAaddzNwgJw61nDbDA-J9RCdt7nYAD_c53WhUY";
+  const expiredToken = TestingService.generateToken({
+    expired: true
+  });
 
   const res = await request(server)
     .get("/v1/auth/refresh-token")
@@ -63,28 +36,30 @@ it("returns 401 if a refresh token is expired / not found", async () => {
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("RefreshTokenExpired");
+  expect(errors[0].errorType).toBe(ErrorTypes.RefreshTokenExpired);
 });
 
 it("returns 400 if a malformed token is sent", async () => {
+  const malformedToken = TestingService.generateToken({
+    malformed: true
+  });
+
   const res = await request(server)
     .get("/v1/auth/refresh-token")
-    .set("Authorization", "invalid")
+    .set("Authorization", malformedToken)
     .send()
     .expect(400);
 
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("JsonWebTokenError");
+  expect(errors[0].errorType).toBe(ErrorTypes.JsonWebTokenError);
 });
 
 it("returns 400 if an invalid token is sent", async () => {
-  /**
-   * Defines the invalid token
-   */
-  const invalidToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwYWQyODg3Y2U0NmRhNDFmYzRkMTIzNiIsInRrSWQiOiI2MGIzNWY5NDgzM2JhYjRlNDQxZWFmYzgiLCJyZWZyZXNoVG9rZW4iOiI2MGIzNWY5NDgzM2JhYjRlNDQxZWFmYzkiLCJpYXQiOjE2MjIzNjgxNDksImV4cCI6MTYyMjM2OTk0OX0.gtCmL5nzLSIvVFuxU8oWwXA5VzKmPr95OmRziWIo_RY";
+  const invalidToken = TestingService.generateToken({
+    invalid: true
+  });
 
   const res = await request(server)
     .get("/v1/auth/refresh-token")
@@ -95,5 +70,20 @@ it("returns 400 if an invalid token is sent", async () => {
   const { errors } = res.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("JsonWebTokenError");
+  expect(errors[0].errorType).toBe(ErrorTypes.JsonWebTokenError);
+});
+
+it("returns 200 and a new access token", async () => {
+  const { token } = await TestingService.createUserAccount();
+
+  const response = await request(server)
+    .get("/v1/auth/refresh-token")
+    .set("Authorization", token)
+    .send()
+    .expect(200);
+
+  const { accessToken } = response.body;
+
+  expect(accessToken).toBeDefined();
+  expect(accessToken.length).toBeGreaterThan(100);
 });

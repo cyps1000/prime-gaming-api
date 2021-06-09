@@ -20,7 +20,7 @@ import { Article } from "../../../models/Article";
 import {
   validateRequest,
   requireAuth,
-  currentUser,
+  currentUser
 } from "../../../middlewares";
 
 /**
@@ -43,7 +43,7 @@ const requestValidation = [
   body("articleId")
     .not()
     .isEmpty()
-    .withMessage("You must provide an article id."),
+    .withMessage("You must provide an article id.")
 ];
 
 /**
@@ -61,7 +61,7 @@ const createComment = async (req: Request, res: Response) => {
   const comment = Comment.build({
     content,
     user: req.currentUser!,
-    articleId: foundArticle.id,
+    articleId: foundArticle.id
   });
 
   await comment.save();
@@ -81,7 +81,7 @@ const createCommentController: RequestHandler[] = [
   currentUser,
   ...requestValidation,
   validateRequest,
-  createComment,
+  createComment
 ];
 
 export { createCommentController };

@@ -6,132 +6,80 @@ import request from "supertest";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root",
-      password: "Da2xVHtnPjB1l6!"
-    })
-    .expect(201);
+import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
-  return { token: resp.body.token };
+/**
+ * Defines the test config
+ */
+const config: TestConfig = {
+  url: "/v1/users/60b4fa10ded55343745e29d7",
+  method: "get",
+  middlewares: ["requireAdminAuth"],
 };
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).get("/v1/users/483895348958394").send({});
-  expect(res.status).not.toEqual(404);
-});
+TestingService.use(config);
 
 it("returns 404 if trying to get a user that doesn't exist", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .get("/v1/users/60b4fa10ded55343745e29d7")
     .set("Authorization", token)
     .send()
     .expect(404);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AccountNotFound");
+  expect(errors[0].errorType).toBe(ErrorTypes.AccountNotFound);
 });
 
 it("returns 400 if the provided param id is invalid", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .get("/v1/users/this_is_an_invalid_id")
     .set("Authorization", token)
     .send()
     .expect(400);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("InvalidObjectID");
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const created = await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@doe.com",
-      password: "test1234"
-    })
-    .expect(201);
-
-  const { user } = created.body;
-
-  const res = await request(server)
-    .get(`/v1/users/${user.id}`)
-    .send()
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors).toBeDefined();
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-  expect(errors.length).toBeGreaterThan(0);
+  expect(errors[0].errorType).toBe(ErrorTypes.InvalidObjectID);
 });
 
 it("returns 200 and the user on a successful request", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
+  const { user } = await TestingService.createUserAccount();
 
-  const requestBody = {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@doe.com",
-    password: "test1234"
-  };
-
-  const created = await request(server)
-    .post("/v1/auth/register")
-    .send(requestBody)
-    .expect(201);
-
-  const { user } = created.body;
-
-  const res = await request(server)
+  const resonse = await request(server)
     .get(`/v1/users/${user.id}`)
     .set("Authorization", token)
     .send()
     .expect(200);
 
-  expect(res.body.email).toBe(requestBody.email);
-  expect(res.body.firstName).toBe(requestBody.firstName);
-  expect(res.body.lastName).toBe(requestBody.lastName);
+  expect(resonse.body.email).toBe(user.email);
+  expect(resonse.body.firstName).toBe(user.firstName);
+  expect(resonse.body.lastName).toBe(user.lastName);
 });
 
 it("returns 401 if the request is not made by an admin", async () => {
-  const requestBody = {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@doe.com",
-    password: "test1234"
-  };
+  const { user } = await TestingService.createUserAccount();
+  const { token } = await TestingService.createUserAccount();
 
-  const created = await request(server)
-    .post("/v1/auth/register")
-    .send(requestBody)
-    .expect(201);
-
-  const { user, token } = created.body;
-
-  const res = await request(server)
+  const response = await request(server)
     .get(`/v1/users/${user.id}`)
     .set("Authorization", token)
     .send()
     .expect(401);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors).toBeDefined();
-  expect(errors[0].errorType).toBe("NotAuthorized");
+  expect(errors[0].errorType).toBe(ErrorTypes.NotAuthorized);
   expect(errors.length).toBeGreaterThan(0);
 });

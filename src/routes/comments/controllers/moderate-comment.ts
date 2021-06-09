@@ -34,7 +34,6 @@ const requestValidation = [
  * Handles moderating a comment
  */
 const moderateComment = async (req: Request, res: Response) => {
-  const { token } = req;
   const { content } = req.body;
   const { id } = req.params;
 
@@ -50,7 +49,7 @@ const moderateComment = async (req: Request, res: Response) => {
 
   await comment.save();
 
-  res.send(comment);
+  res.send({ success: true, comment });
 };
 
 /**
