@@ -1,5 +1,4 @@
 import request from "supertest";
-import faker from "faker";
 
 /**
  * Imports the server
@@ -7,110 +6,80 @@ import faker from "faker";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root",
-      password: "Da2xVHtnPjB1l6!"
-    })
-    .expect(201);
-
-  return { token: resp.body.token, user: resp.body.user };
-};
+import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
 /**
- * Handles getting an admin token
+ * Defines the test config
  */
-const getUserToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: faker.name.findName(),
-      lastName: faker.name.lastName(),
-      email: faker.internet.email(),
-      password: faker.internet.password()
-    })
-    .expect(201);
-
-  return { token: resp.body.token, user: resp.body.user };
+const config: TestConfig = {
+  url: "/v1/users/60b4fa10ded55343745e29d7/suspend",
+  method: "put",
+  middlewares: ["requireAuth"],
 };
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server)
-    .put("/v1/users/483895348958394/suspend")
-    .send({});
-  expect(res.status).not.toEqual(404);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server)
-    .put("/v1/users/60b5972e408e6f2970045bee/suspend")
-    .send({})
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
+TestingService.use(config);
 
 it("returns 404 if the account wasn't found", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .put("/v1/users/60b5972e408e6f2970045bee/suspend")
     .set("Authorization", token)
     .send()
     .expect(404);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AccountNotFound");
+  expect(errors[0].errorType).toBe(ErrorTypes.AccountNotFound);
 });
 
 it("returns 401 if a user is trying to suspend another user's account", async () => {
-  const { token: adminToken } = await getAdminToken();
-  const { user: userOne } = await getUserToken();
-  const { token: tokenUserTwo } = await getUserToken();
+  const { user } = await TestingService.createUserAccount();
+  const { token } = await TestingService.createUserAccount();
 
-  const res = await request(server)
-    .put(`/v1/users/${userOne.id}/suspend`)
-    .set("Authorization", tokenUserTwo)
+  const response = await request(server)
+    .put(`/v1/users/${user.id}/suspend`)
+    .set("Authorization", token)
     .send()
     .expect(401);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("NotAuthorized");
-
-  const adminRes = await request(server)
-    .put(`/v1/users/${userOne.id}/suspend`)
-    .set("Authorization", adminToken)
-    .send()
-    .expect(200);
-
-  const { success, user } = adminRes.body;
-
-  expect(success).toBe(true);
-  expect(user.suspended).toBe(true);
+  expect(errors[0].errorType).toBe(ErrorTypes.NotAuthorized);
 });
 
-it("returns 200 if a user is trying to suspend his own account", async () => {
-  const { user: userData, token } = await getUserToken();
+it("returns 200 if an admin is trying to suspend an account", async () => {
+  const { token } = await TestingService.createAdminAccount();
+  const { user } = await TestingService.createUserAccount();
 
-  const res = await request(server)
-    .put(`/v1/users/${userData.id}/suspend`)
+  const response = await request(server)
+    .put(`/v1/users/${user.id}/suspend`)
     .set("Authorization", token)
     .send()
     .expect(200);
 
-  const { success, user } = res.body;
+  const { success, user: responseUser } = response.body;
 
   expect(success).toBe(true);
-  expect(user.suspended).toBe(true);
+  expect(responseUser.suspended).toBe(true);
+});
+
+it("returns 200 if a user is trying to suspend his own account", async () => {
+  const { token, user } = await TestingService.createUserAccount();
+
+  const response = await request(server)
+    .put(`/v1/users/${user.id}/suspend`)
+    .set("Authorization", token)
+    .send()
+    .expect(200);
+
+  const { success, user: responseUser } = response.body;
+
+  expect(success).toBe(true);
+  expect(responseUser.suspended).toBe(true);
 });

@@ -1,97 +1,86 @@
 import request from "supertest";
+import faker from "faker";
 
 /**
  * Imports the server
  */
 import { server } from "../../../server";
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).post("/v1/auth/login").send({});
-  expect(res.status).not.toEqual(404);
-});
+/**
+ * Imports services
+ */
+import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
-it("returns 400 if the provided inputs are not valid", async () => {
-  const res = await request(server).post("/v1/auth/login").send({}).expect(400);
+/**
+ * Defines the test config
+ */
+const config: TestConfig = {
+  url: "/v1/auth/login",
+  method: "post",
+  middlewares: ["validateRequest"],
+  fields: [
+    {
+      name: "email",
+      getValue: faker.internet.email,
+      validate: true
+    },
+    {
+      name: "password",
+      getValue: faker.internet.password,
+      validate: true
+    }
+  ]
+};
 
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(2);
-  expect(errors[0].field).toBe("email");
-  expect(errors[0].errorType).toBe("InputValidation");
-  expect(errors[1].field).toBe("password");
-  expect(errors[1].errorType).toBe("InputValidation");
-});
+TestingService.use(config);
 
 it("returns 400 if the email is wrong", async () => {
-  await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@doe.com",
-      password: "test1234",
-    })
-    .expect(201);
+  const { requestBody } = await TestingService.createUserAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .post("/v1/auth/login")
     .send({
-      email: "___john@doe.com",
-      password: "test1234",
+      email: "wrong-email@test.com",
+      password: requestBody.password
     })
     .expect(400);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("InvalidCredentials");
+  expect(errors[0].errorType).toBe(ErrorTypes.InvalidCredentials);
 });
 
 it("returns 400 if the password is wrong", async () => {
-  await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@doe.com",
-      password: "test1234",
-    })
-    .expect(201);
+  const { requestBody } = await TestingService.createUserAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .post("/v1/auth/login")
     .send({
-      email: "john@doe.com",
-      password: "___test1234",
+      email: requestBody.email,
+      password: "wrong-password"
     })
     .expect(400);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("InvalidCredentials");
+  expect(errors[0].errorType).toBe(ErrorTypes.InvalidCredentials);
 });
 
 it("returns an access token upon logging in", async () => {
-  await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: "John",
-      lastName: "Doe",
-      email: "john@doe.com",
-      password: "test1234",
-    })
-    .expect(201);
+  const { requestBody } = await TestingService.createUserAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .post("/v1/auth/login")
     .send({
-      email: "john@doe.com",
-      password: "test1234",
+      email: requestBody.email,
+      password: requestBody.password
     })
     .expect(200);
 
-  const { token } = res.body;
+  const { token } = response.body;
 
   expect(token).toBeDefined();
   expect(token.length).toBeGreaterThan(100);

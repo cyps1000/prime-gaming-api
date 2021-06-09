@@ -31,10 +31,7 @@ const requestValidation = [
     .not()
     .isEmpty()
     .withMessage("Please provide a username"),
-  body("password")
-    .trim()
-    .notEmpty()
-    .withMessage("You must provide a password."),
+  body("password").trim().notEmpty().withMessage("You must provide a password.")
 ];
 
 /**
@@ -69,7 +66,7 @@ const loginAdmin = async (req: Request, res: Response) => {
    */
   const payload = {
     id: existingAdmin.id,
-    role: existingAdmin.role,
+    role: existingAdmin.role
   };
 
   /**
@@ -86,7 +83,7 @@ const loginAdmin = async (req: Request, res: Response) => {
 const loginAdminController: RequestHandler[] = [
   ...requestValidation,
   validateRequest,
-  loginAdmin,
+  loginAdmin
 ];
 
 export { loginAdminController };

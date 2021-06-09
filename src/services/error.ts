@@ -120,6 +120,12 @@ export enum ErrorTypes {
    * @message Unable to permanently delete your account. You account is not currently suspended. Please suspend your account and try again.
    */
   NotSuspendedAccount = "NotSuspendedAccount",
+
+  /**
+   * @statusCode 400
+   * @message jsonwebtoken - error message
+   */
+  JsonWebTokenError = "JsonWebTokenError"
 }
 
 /**
@@ -314,6 +320,14 @@ const buildRequestError = (errorType: ErrorTypes) => {
       break;
 
     /**
+     * Json Web Token Error
+     */
+    case ErrorTypes.JsonWebTokenError:
+      statusCode = 400;
+      message = "";
+      break;
+
+    /**
      * Defaults
      */
     default:
@@ -324,7 +338,7 @@ const buildRequestError = (errorType: ErrorTypes) => {
 
   return {
     statusCode,
-    message,
+    message
   };
 };
 
@@ -360,7 +374,7 @@ export class RequestError extends CustomError {
           message: err.msg,
           field: err.param,
           errorType: this.errorType,
-          statusCode: this.statusCode,
+          statusCode: this.statusCode
         };
       });
     }
@@ -369,8 +383,8 @@ export class RequestError extends CustomError {
       {
         message: this.message,
         errorType: this.errorType,
-        statusCode: this.statusCode,
-      },
+        statusCode: this.statusCode
+      }
     ];
   }
 }

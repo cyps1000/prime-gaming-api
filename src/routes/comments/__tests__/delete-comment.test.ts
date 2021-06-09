@@ -7,201 +7,94 @@ import faker from "faker";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root",
-      password: "Da2xVHtnPjB1l6!",
-    })
-    .expect(201);
-
-  return { token: resp.body.token };
-};
+import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
 /**
- * Handles getting an admin token
+ * Defines the test config
  */
-const getUserToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register")
-    .send({
-      firstName: faker.name.findName(),
-      lastName: faker.name.lastName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-    })
-    .expect(201);
-
-  return { token: resp.body.token };
+const config: TestConfig = {
+  url: "/v1/comments/60b4fa10ded55343745e29d7",
+  method: "delete",
+  middlewares: ["requireAuth"]
 };
 
-/**
- * Handles creating an article
- */
-const createArticle = async () => {
-  const { token } = await getAdminToken();
-
-  const requestBody = {
-    title: "Test Article",
-    content: "Test content",
-  };
-
-  const res = await request(server)
-    .post("/v1/articles")
-    .set("Authorization", token)
-    .send(requestBody)
-    .expect(201);
-
-  return { article: res.body, token };
-};
-
-it("has a router handler listening for requests", async () => {
-  const res = await request(server)
-    .delete("/v1/comments/4325903459034")
-    .send({});
-  expect(res.status).not.toEqual(404);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server)
-    .delete("/v1/comments/4325903459034")
-    .send({})
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
+TestingService.use(config);
 
 it("returns 404 if trying to delete a comment that doesn't exist", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .delete("/v1/comments/60b4fa10ded55343745e29d7")
     .set("Authorization", token)
     .send()
     .expect(404);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
+  expect(errors[0].errorType).toBe(ErrorTypes.ResourceNotFound);
 });
 
 it("returns 400 if the provided param id is invalid", async () => {
-  const { token } = await getAdminToken();
+  const { token } = await TestingService.createAdminAccount();
 
-  const res = await request(server)
+  const response = await request(server)
     .delete("/v1/comments/this_is_an_invalid_id")
     .set("Authorization", token)
     .send()
     .expect(400);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("InvalidObjectID");
+  expect(errors[0].errorType).toBe(ErrorTypes.InvalidObjectID);
 });
 
 it("returns 400 if a user is trying to delete another user's comment", async () => {
-  const { article } = await createArticle();
-  const { token: firstUser } = await getUserToken();
-  const { token: secondUser } = await getUserToken();
+  const { comment } = await TestingService.createComment();
+  const { token } = await TestingService.createUserAccount();
 
-  const requestBody = {
-    content: "Test content",
-    articleId: article.id,
-  };
-
-  const created = await request(server)
-    .post("/v1/comments")
-    .set("Authorization", firstUser)
-    .send(requestBody)
-    .expect(201);
-
-  const { id } = created.body;
-
-  const res = await request(server)
-    .delete(`/v1/comments/${id}`)
-    .set("Authorization", secondUser)
+  const response = await request(server)
+    .delete(`/v1/comments/${comment.id}`)
+    .set("Authorization", token)
     .send()
     .expect(401);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("NotAuthorized");
+  expect(errors[0].errorType).toBe(ErrorTypes.NotAuthorized);
 });
 
 it("allows an admin to delete another user's comment", async () => {
-  const { article, token: adminToken } = await createArticle();
-  const { token: firstUser } = await getUserToken();
-  const { token: secondUser } = await getUserToken();
+  const { comment, adminToken } = await TestingService.createComment();
 
-  const requestBody = {
-    content: "Test content",
-    articleId: article.id,
-  };
-
-  const created = await request(server)
-    .post("/v1/comments")
-    .set("Authorization", firstUser)
-    .send(requestBody)
-    .expect(201);
-
-  const { id } = created.body;
-
-  const res = await request(server)
-    .delete(`/v1/comments/${id}`)
-    .set("Authorization", secondUser)
-    .send()
-    .expect(401);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("NotAuthorized");
-
-  const adminDeleteRes = await request(server)
-    .delete(`/v1/comments/${id}`)
+  const response = await request(server)
+    .delete(`/v1/comments/${comment.id}`)
     .set("Authorization", adminToken)
     .send()
     .expect(200);
 
-  const { success, comment } = adminDeleteRes.body;
+  const { success, comment: responseComment } = response.body;
 
   expect(success).toBe(true);
-  expect(comment.id).toBe(id);
+  expect(responseComment.id).toBe(comment.id);
 });
 
 it("returns 200 when the request is successful", async () => {
-  const { token, article } = await createArticle();
+  const { comment, token } = await TestingService.createComment();
 
-  const requestBody = {
-    content: "Test content",
-    articleId: article.id,
-  };
-
-  const created = await request(server)
-    .post("/v1/comments")
-    .set("Authorization", token)
-    .send(requestBody)
-    .expect(201);
-
-  const { id } = created.body;
-
-  const res = await request(server)
-    .delete(`/v1/comments/${id}`)
+  const response = await request(server)
+    .delete(`/v1/comments/${comment.id}`)
     .set("Authorization", token)
     .send()
     .expect(200);
 
-  const { success, comment } = res.body;
+  const { success, comment: responseComment } = response.body;
 
   expect(success).toBe(true);
-  expect(comment.id).toBe(id);
+  expect(responseComment.id).toBe(comment.id);
 });
