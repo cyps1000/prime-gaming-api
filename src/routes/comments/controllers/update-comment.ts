@@ -15,7 +15,7 @@ import { body } from "express-validator";
 import {
   validateRequest,
   currentUser,
-  requireAuth,
+  requireAuth
 } from "../../../middlewares";
 
 /**
@@ -27,7 +27,7 @@ import { RequestError, ErrorTypes } from "../../../services/error";
  * Defines the request validation middleware
  */
 const requestValidation = [
-  body("content").not().isEmpty().withMessage("Please provide the content"),
+  body("content").not().isEmpty().withMessage("Please provide the content")
 ];
 
 /**
@@ -56,7 +56,7 @@ const updateComment = async (req: Request, res: Response) => {
 
   await comment.save();
 
-  res.send(comment);
+  res.send({ success: true, comment });
 };
 
 /**
@@ -67,7 +67,7 @@ const updateCommentController: RequestHandler[] = [
   currentUser,
   ...requestValidation,
   validateRequest,
-  updateComment,
+  updateComment
 ];
 
 export { updateCommentController };

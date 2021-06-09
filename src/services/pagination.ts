@@ -37,6 +37,16 @@ export interface PaginationConfig {
 }
 
 /**
+ * Handles calculating the total number of pages
+ */
+export const calculateTotalPages = (count: number, limit: number) => {
+  const pages = (count + limit - 1) / limit;
+  const totalPages = Math.floor(pages);
+
+  return count < limit ? 1 : totalPages;
+};
+
+/**
  * Defines the auth service
  */
 export class PaginationService {
@@ -44,6 +54,15 @@ export class PaginationService {
   static DEFAULT_LIMIT = 15;
   static DEFAULT_ORDER_BY = "createdAt";
   static DEFAULT_ORDER_DIR = "desc";
+
+  static getDefaultOptions() {
+    return {
+      DEFAULT_CURRENT_PAGE: this.DEFAULT_CURRENT_PAGE,
+      DEFAULT_LIMIT: this.DEFAULT_LIMIT,
+      DEFAULT_ORDER_BY: this.DEFAULT_ORDER_BY,
+      DEFAULT_ORDER_DIR: this.DEFAULT_ORDER_DIR
+    };
+  }
 
   /**
    * Handles normalizing the query param
@@ -80,7 +99,7 @@ export class PaginationService {
       page: this.normalize(query.page, this.DEFAULT_CURRENT_PAGE, parseInt),
       limit: this.normalize(query.limit, this.DEFAULT_LIMIT, parseInt),
       orderBy: this.normalize(query.orderBy, this.DEFAULT_ORDER_BY),
-      orderDir: this.normalize(query.orderDir, this.DEFAULT_ORDER_DIR),
+      orderDir: this.normalize(query.orderDir, this.DEFAULT_ORDER_DIR)
     };
 
     /**
@@ -89,20 +108,10 @@ export class PaginationService {
     const calculateSkip = () => (options.page - 1) * options.limit;
 
     /**
-     * Handles calculating the total number of pages
-     */
-    const calculateTotalPages = () => {
-      const pages = (count + options.limit - 1) / options.limit;
-      const totalPages = Math.floor(pages);
-
-      return count < options.limit ? 1 : totalPages;
-    };
-
-    /**
      * Handles getting the sorting order
      */
     const getSortOrder = () => ({
-      [options.orderBy]: options.orderDir,
+      [options.orderBy]: options.orderDir
     });
 
     /**
@@ -123,13 +132,13 @@ export class PaginationService {
     /**
      * Gets the total amount of pages
      */
-    const pages = calculateTotalPages();
+    const pages = calculateTotalPages(count, options.limit);
 
     return {
       items,
       count,
       pages,
-      ...options,
+      ...options
     };
   }
 }

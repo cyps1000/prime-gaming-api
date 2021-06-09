@@ -1,6 +1,4 @@
 import request from "supertest";
-import faker from "faker";
-import { Admin, Article } from "../../../models";
 
 /**
  * Imports the server
@@ -8,69 +6,48 @@ import { Admin, Article } from "../../../models";
 import { server } from "../../../server";
 
 /**
- * Handles generating a list of articles
+ * Imports services
  */
-const generateArticles = async (count: number) => {
-  const admin = Admin.build({
-    username: "admin-root",
-    password: "Da2xVHtnPjB1l6!",
-    role: "prime-admin",
-  });
-
-  await admin.save();
-
-  if (admin) {
-    const data: any[] = [];
-
-    for (let i = 0; i < count; i++) {
-      data.push({
-        title: faker.lorem.sentence(5, 10),
-        content: faker.lorem.paragraph(20),
-        author: admin.id,
-      });
-    }
-
-    Article.insertMany(data);
-  }
-};
+import { TestingService, TestConfig } from "../../../services/testing";
+import {
+  calculateTotalPages,
+  PaginationService
+} from "../../../services/pagination";
 
 /**
- * Handles calculating the total number of pages
+ * Defines the test config
  */
-const calculateTotalPages = (count: number, limit: number) => {
-  /**
-   * Defines the total pages
-   */
-  const totalPages = Math.floor((count + limit - 1) / limit);
-
-  return count < limit ? 1 : totalPages;
+const config: TestConfig = {
+  url: "/v1/articles/60b4fa10ded55343745e29d7",
+  method: "get",
+  middlewares: []
 };
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).get("/v1/articles").send({});
-  expect(res.status).not.toEqual(404);
-});
+TestingService.use(config);
 
 it("returns 200 and a list of articles", async () => {
   /**
    * Defines the default pagination options
    */
-  const articlesCount = 25;
-  const DEFAULT_CURRENT_PAGE = 1;
-  const DEFAULT_LIMIT = 15;
-  const DEFAULT_ORDER_BY = "createdAt";
-  const DEFAULT_ORDER_DIR = "desc";
+  const {
+    DEFAULT_CURRENT_PAGE,
+    DEFAULT_LIMIT,
+    DEFAULT_ORDER_BY,
+    DEFAULT_ORDER_DIR
+  } = PaginationService.getDefaultOptions();
 
-  await generateArticles(articlesCount);
+  await TestingService.generateArticles(25);
 
-  const res = await request(server).get("/v1/articles").send({}).expect(200);
-  const totalPages = calculateTotalPages(articlesCount, DEFAULT_LIMIT);
+  const response = await request(server)
+    .get("/v1/articles")
+    .send({})
+    .expect(200);
 
-  const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
+  const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
 
   expect(items.length).toBe(limit);
-  expect(count).toBe(articlesCount);
-  expect(pages).toBe(totalPages);
+  expect(count).toBe(25);
+  expect(pages).toBe(calculateTotalPages(25, DEFAULT_LIMIT));
   expect(page).toBe(DEFAULT_CURRENT_PAGE);
   expect(limit).toBe(DEFAULT_LIMIT);
   expect(orderBy).toBe(DEFAULT_ORDER_BY);
@@ -78,55 +55,41 @@ it("returns 200 and a list of articles", async () => {
 });
 
 it("returns 200 and correctly paginates", async () => {
-  const articlesCount = 15;
-  const request_limit = 2;
-  const request_page = 3;
-  const request_orderBy = "title";
-  const request_orderDir = "asc";
+  await TestingService.generateArticles(15);
 
-  await generateArticles(articlesCount);
-  const res = await request(server)
-    .get(
-      `/v1/articles?limit=${request_limit}&page=${request_page}&orderBy=${request_orderBy}&orderDir=${request_orderDir}`
-    )
+  const response = await request(server)
+    .get(`/v1/articles?limit=2&page=3&orderBy=title&orderDir=asc`)
     .send({})
     .expect(200);
 
-  const totalPages = calculateTotalPages(articlesCount, request_limit);
-  const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
+  const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
+  const totalPages = calculateTotalPages(15, 2);
 
   expect(items.length).toBe(limit);
-  expect(count).toBe(articlesCount);
+  expect(count).toBe(15);
   expect(pages).toBe(totalPages);
-  expect(page).toBe(request_page);
-  expect(limit).toBe(request_limit);
-  expect(orderBy).toBe(request_orderBy);
-  expect(orderDir).toBe(request_orderDir);
+  expect(page).toBe(3);
+  expect(limit).toBe(2);
+  expect(orderBy).toBe("title");
+  expect(orderDir).toBe("asc");
 });
 
 it("returns 200 and an empty array if over-paginated", async () => {
-  const articlesCount = 15;
-  const request_limit = 100;
-  const request_page = 2;
-  const request_orderBy = "title";
-  const request_orderDir = "asc";
+  await TestingService.generateArticles(15);
 
-  await generateArticles(articlesCount);
-  const res = await request(server)
-    .get(
-      `/v1/articles?limit=${request_limit}&page=${request_page}&orderBy=${request_orderBy}&orderDir=${request_orderDir}`
-    )
+  const response = await request(server)
+    .get(`/v1/articles?limit=100&page=2&orderBy=title&orderDir=asc`)
     .send({})
     .expect(200);
 
-  const totalPages = calculateTotalPages(articlesCount, request_limit);
-  const { count, pages, page, limit, orderBy, orderDir, items } = res.body;
+  const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
+  const totalPages = calculateTotalPages(15, 100);
 
   expect(items.length).toBe(0);
-  expect(count).toBe(articlesCount);
+  expect(count).toBe(15);
   expect(pages).toBe(totalPages);
-  expect(page).toBe(request_page);
-  expect(limit).toBe(request_limit);
-  expect(orderBy).toBe(request_orderBy);
-  expect(orderDir).toBe(request_orderDir);
+  expect(page).toBe(2);
+  expect(limit).toBe(100);
+  expect(orderBy).toBe("title");
+  expect(orderDir).toBe("asc");
 });

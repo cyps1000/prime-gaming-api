@@ -1,4 +1,5 @@
 import request from "supertest";
+import faker from "faker";
 
 /**
  * Imports the server
@@ -6,112 +7,64 @@ import request from "supertest";
 import { server } from "../../../server";
 
 /**
- * Handles getting an admin token
+ * Imports services
  */
-const getAdminToken = async () => {
-  const resp = await request(server)
-    .post("/v1/auth/register-admin")
-    .send({
-      username: "admin-root",
-      password: "Da2xVHtnPjB1l6!",
-    })
-    .expect(201);
-
-  return { token: resp.body.token };
-};
+import { TestingService, TestConfig } from "../../../services/testing";
+import { ErrorTypes } from "../../../services/error";
 
 /**
- * Handles creating an article
+ * Defines the test config
  */
-const createArticle = async () => {
-  const { token } = await getAdminToken();
-
-  const requestBody = {
-    title: "Test Article",
-    content: "Test content",
-  };
-
-  const res = await request(server)
-    .post("/v1/articles")
-    .set("Authorization", token)
-    .send(requestBody)
-    .expect(201);
-
-  return { article: res.body, token };
+const config: TestConfig = {
+  url: "/v1/articles/60b4fa10ded55343745e29d7",
+  method: "put",
+  middlewares: ["requireAdminAuth", "validateRequest"],
+  fields: [
+    {
+      name: "title",
+      getValue: () => faker.lorem.sentence(3),
+      validate: true
+    },
+    {
+      name: "content",
+      getValue: () => faker.lorem.paragraph(3),
+      validate: true
+    }
+  ]
 };
 
-it("has a router handler listening for requests", async () => {
-  const res = await request(server).put("/v1/articles/4325903459034").send({});
-  expect(res.status).not.toEqual(404);
-});
-
-it("returns 400 if no Authorization header is provided", async () => {
-  const res = await request(server)
-    .put("/v1/articles/60b5972e408e6f2970045bee")
-    .send({})
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("AuthorizationRequired");
-});
+TestingService.use(config);
 
 it("returns 400 if the article wasn't found", async () => {
-  const { token } = await getAdminToken();
+  const { token, requestBody } = await TestingService.createArticle();
 
-  const requestBody = {
-    title: "Test Article - CHANGED",
-    content: "Test content - CHANGED",
-  };
-
-  const res = await request(server)
+  const response = await request(server)
     .put("/v1/articles/60b5972e408e6f2970045bee")
     .set("Authorization", token)
     .send(requestBody)
     .expect(404);
 
-  const { errors } = res.body;
+  const { errors } = response.body;
 
   expect(errors.length).toBe(1);
-  expect(errors[0].errorType).toBe("ResourceNotFound");
-});
-
-it("returns 400 if the provided inputs are not valid", async () => {
-  const { article, token } = await createArticle();
-
-  const res = await request(server)
-    .put(`/v1/articles/${article.id}`)
-    .set("Authorization", token)
-    .send({})
-    .expect(400);
-
-  const { errors } = res.body;
-
-  expect(errors.length).toBe(2);
-
-  expect(errors[0].field).toBe("title");
-  expect(errors[0].errorType).toBe("InputValidation");
-
-  expect(errors[1].field).toBe("content");
-  expect(errors[1].errorType).toBe("InputValidation");
+  expect(errors[0].errorType).toBe(ErrorTypes.ResourceNotFound);
 });
 
 it("returns 200 and the updated article", async () => {
-  const { article, token } = await createArticle();
+  const { article, token } = await TestingService.createArticle();
 
   const requestBody = {
-    title: "Test Article - CHANGED",
-    content: "Test content - CHANGED",
+    title: faker.lorem.sentence(5, 10),
+    content: faker.lorem.paragraph(20)
   };
 
-  const res = await request(server)
+  const response = await request(server)
     .put(`/v1/articles/${article.id}`)
     .set("Authorization", token)
     .send(requestBody)
     .expect(200);
 
-  const { title, content } = res.body;
+  const { title, content } = response.body;
 
   expect(title).toBe(requestBody.title);
   expect(content).toBe(requestBody.content);

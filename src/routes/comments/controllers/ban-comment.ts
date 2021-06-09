@@ -14,7 +14,7 @@ import { Comment } from "../../../models";
 import {
   currentUser,
   requireAdminAuth,
-  validateRequest,
+  validateRequest
 } from "../../../middlewares";
 
 /**
@@ -39,7 +39,7 @@ const banComment = async (req: Request, res: Response) => {
 
   await comment.save();
 
-  res.send(comment);
+  res.send({ success: true, comment });
 };
 
 /**
@@ -49,7 +49,7 @@ const banCommentController: RequestHandler[] = [
   requireAdminAuth,
   currentUser,
   validateRequest,
-  banComment,
+  banComment
 ];
 
 export { banCommentController };
