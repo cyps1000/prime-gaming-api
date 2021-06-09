@@ -206,7 +206,7 @@ export class TestingService {
       firstName: faker.name.firstName(),
       lastName: faker.name.lastName(),
       email: faker.internet.email(),
-      password: faker.internet.password()
+      password: faker.internet.password(),
     };
 
     const response = await request(server)
@@ -222,7 +222,7 @@ export class TestingService {
   static async createAdminAccount() {
     const requestBody = {
       username: faker.internet.userName(),
-      password: "Hj7sSfes2AS556vFr!"
+      password: "Hj7sSfes2AS556vFr!",
     };
 
     const adminExists = await Admin.find({});
@@ -249,7 +249,7 @@ export class TestingService {
 
     const requestBody = {
       title: faker.lorem.sentence(3),
-      content: faker.lorem.paragraph(3)
+      content: faker.lorem.paragraph(3),
     };
 
     const response = await request(server)
@@ -272,11 +272,11 @@ export class TestingService {
 
     const secretKey = config?.invalid ? "invalid_secret" : process.env.JWT_KEY!;
     const payload = {
-      id: mongoose.Types.ObjectId().toHexString()
+      id: mongoose.Types.ObjectId().toHexString(),
     };
 
     return jwt.sign(payload, secretKey, {
-      expiresIn: config?.expired ? 1 : 60
+      expiresIn: config?.expired ? 1 : 60,
     });
   }
 
@@ -289,7 +289,7 @@ export class TestingService {
       data.push({
         title: faker.lorem.sentence(5, 10),
         content: faker.lorem.paragraph(20),
-        author: user.id
+        author: user.id,
       });
     }
 
@@ -300,7 +300,7 @@ export class TestingService {
     const article = Article.build({
       title: faker.lorem.sentence(5, 10),
       content: faker.lorem.paragraph(20),
-      author: user.id
+      author: user.id,
     });
 
     await article.save();
@@ -311,11 +311,26 @@ export class TestingService {
       data.push({
         content: faker.lorem.paragraph(1),
         user: user.id,
-        articleId: article.id
+        articleId: article.id,
       });
     }
 
     Comment.insertMany(data);
+  }
+
+  static async generateUsers(count: number) {
+    const data: any[] = [];
+
+    for (let i = 0; i < count; i++) {
+      data.push({
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+      });
+    }
+
+    User.insertMany(data);
   }
 
   static async createComment(config?: { banned: boolean }) {
@@ -324,7 +339,7 @@ export class TestingService {
 
     const requestBody = {
       content: faker.lorem.paragraph(3),
-      articleId: article.id
+      articleId: article.id,
     };
 
     const response = await request(server)

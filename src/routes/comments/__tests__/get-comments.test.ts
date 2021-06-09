@@ -11,7 +11,7 @@ import { server } from "../../../server";
 import { TestingService, TestConfig } from "../../../services/testing";
 import {
   calculateTotalPages,
-  PaginationService
+  PaginationService,
 } from "../../../services/pagination";
 
 /**
@@ -20,7 +20,7 @@ import {
 const config: TestConfig = {
   url: "/v1/comments",
   method: "get",
-  middlewares: ["requireAdminAuth"]
+  middlewares: ["requireAdminAuth"],
 };
 
 TestingService.use(config);
@@ -35,7 +35,7 @@ it("returns 200 and a list of comments", async () => {
     DEFAULT_CURRENT_PAGE,
     DEFAULT_LIMIT,
     DEFAULT_ORDER_BY,
-    DEFAULT_ORDER_DIR
+    DEFAULT_ORDER_DIR,
   } = PaginationService.getDefaultOptions();
 
   await TestingService.generateComments(25, user);
@@ -47,10 +47,11 @@ it("returns 200 and a list of comments", async () => {
     .expect(200);
 
   const { count, pages, page, limit, orderBy, orderDir, items } = response.body;
+  const totalPages = calculateTotalPages(25, DEFAULT_LIMIT);
 
   expect(items.length).toBe(limit);
   expect(count).toBe(25);
-  expect(pages).toBe(calculateTotalPages(25, DEFAULT_LIMIT));
+  expect(pages).toBe(totalPages);
   expect(page).toBe(DEFAULT_CURRENT_PAGE);
   expect(limit).toBe(DEFAULT_LIMIT);
   expect(orderBy).toBe(DEFAULT_ORDER_BY);
