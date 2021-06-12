@@ -25,6 +25,8 @@ export interface UserDocument extends mongoose.Document {
   createdAt: Date;
   updatedAt: Date;
   suspended: boolean;
+  isVerified: boolean;
+  refreshTokenExtended: boolean;
 }
 
 /**
@@ -58,6 +60,14 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     suspended: {
+      type: Boolean,
+      default: false,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    refreshTokenExtended: {
       type: Boolean,
       default: false,
     },
