@@ -1,5 +1,5 @@
 /**
- * @see src\routes\auth\docs\change-password.doc.ts
+ * @see src\routes\users\docs\admin-change-password.doc.ts
  */
 import { Request, Response, RequestHandler } from "express";
 
@@ -14,7 +14,7 @@ import { User } from "../../../models";
 import { body } from "express-validator";
 import {
   currentUser,
-  requireAuth,
+  requireAdminAuth,
   validateRequest,
 } from "../../../middlewares";
 
@@ -22,49 +22,31 @@ import {
  * Imports services
  */
 import { RequestError, ErrorTypes } from "../../../services/error";
-import { PasswordManager } from "../../../services/password-manager";
 
 /**
  * Defines the request validation middleware
  */
 const requestValidation = [
-  body("currentPassword")
-    .trim()
-    .notEmpty()
-    .withMessage("You must provide your current password."),
   body("newPassword")
     .trim()
     .isLength({ min: 4, max: 20 })
-    .withMessage("Your new password must be between 4 and 20 characters"),
+    .withMessage("The password must be between 4 and 20 characters"),
 ];
 
 /**
  * Handles deleting a user
  */
 const changePassword = async (req: Request, res: Response) => {
-  const { currentUser } = req;
-  const { currentPassword, newPassword } = req.body;
+  const { id } = req.params;
+  const { newPassword } = req.body;
 
   /**
    * Searches the user in the db
    */
-  const user = await User.findById(currentUser);
+  const user = await User.findById(id);
 
   if (!user) throw new RequestError(ErrorTypes.AccountNotFound);
 
-  /**
-   * Checks if the provided password is correct
-   */
-  const passwordsMatch = await PasswordManager.compare(
-    user.password,
-    currentPassword
-  );
-
-  if (!passwordsMatch) {
-    throw new RequestError(ErrorTypes.InvalidCredentials);
-  }
-
-  // user.password = await PasswordManager.hash(newPassword);
   user.password = newPassword;
 
   await user.save();
@@ -75,12 +57,12 @@ const changePassword = async (req: Request, res: Response) => {
 /**
  * Defines the controller
  */
-const changePasswordController: RequestHandler[] = [
-  requireAuth,
+const adminChangePasswordController: RequestHandler[] = [
+  requireAdminAuth,
   ...requestValidation,
   validateRequest,
   currentUser,
   changePassword,
 ];
 
-export { changePasswordController };
+export { adminChangePasswordController };
