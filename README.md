@@ -1,4 +1,4 @@
-[![cyps1000](https://circleci.com/gh/cyps1000/prime-gaming-api.svg?style=svg)](https://app.circleci.com/pipelines/github/cyps1000/prime-gaming-api)
+[![cyps1000](https://circleci.com/gh/cyps1000/prime-gaming-api.svg?style=shield)](https://app.circleci.com/pipelines/github/cyps1000/prime-gaming-api)
 
 ## Available Scripts
 
