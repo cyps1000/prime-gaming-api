@@ -1,3 +1,5 @@
+[![cyps1000](https://circleci.com/gh/cyps1000/prime-gaming-api.svg?style=svg)](https://app.circleci.com/pipelines/github/cyps1000/prime-gaming-api)
+
 ## Available Scripts
 
 In the project directory, you can run:
