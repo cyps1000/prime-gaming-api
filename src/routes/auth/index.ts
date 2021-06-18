@@ -10,6 +10,7 @@ import { registerController } from "./controllers/register";
 import { loginAdminController } from "./controllers/login-admin";
 import { registerAdminController } from "./controllers/register-admin";
 import { refreshTokenController } from "./controllers/refresh-token";
+import { changePasswordController } from "./controllers/change-password";
 
 /**
  * Defines the router
@@ -50,5 +51,10 @@ router.post("/auth/login-admin", loginAdminController);
  * Register admin
  */
 router.post("/auth/register-admin", registerAdminController);
+
+/**
+ * Change password
+ */
+router.put("/auth/change-password", changePasswordController);
 
 export { router as authRouter };

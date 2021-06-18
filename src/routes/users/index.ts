@@ -9,6 +9,7 @@ import { deleteUserController } from "./controllers/delete-user";
 import { suspendUserController } from "./controllers/suspend-user";
 import { recoverUserController } from "./controllers/recover-user";
 import { updateUserController } from "./controllers/update-user";
+import { adminChangePasswordController } from "./controllers/admin-change-password";
 
 /**
  * Defines the router
@@ -44,5 +45,10 @@ router.put("/users/:id/suspend", suspendUserController);
  *  Recover a user by id
  */
 router.put("/users/:id/recover", recoverUserController);
+
+/**
+ *  Change a user's password
+ */
+router.put("/users/:id/change-password", adminChangePasswordController);
 
 export { router as usersRouter };
